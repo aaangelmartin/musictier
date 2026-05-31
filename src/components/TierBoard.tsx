@@ -1,0 +1,180 @@
+import { useState } from 'react'
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core'
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import { FiPlus } from 'react-icons/fi'
+import { TierRow } from './TierRow'
+import { UnrankedTray } from './UnrankedTray'
+import { SongCard } from './SongCard'
+import { EXTRA_COLORS, UNRANKED, type BoardState, type Tier } from '../lib/tierStorage'
+import type { Track } from '../lib/types'
+
+interface Props {
+  board: BoardState
+  setBoard: React.Dispatch<React.SetStateAction<BoardState>>
+  trackMap: Record<string, Track>
+  onInfo: (t: Track) => void
+  editable: boolean
+  exportRef: React.Ref<HTMLDivElement>
+}
+
+function findContainer(items: Record<string, string[]>, id: string): string | undefined {
+  if (id in items) return id
+  return Object.keys(items).find((c) => items[c].includes(id))
+}
+
+export function TierBoard({
+  board,
+  setBoard,
+  trackMap,
+  onInfo,
+  editable,
+  exportRef,
+}: Props) {
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  function onDragStart(e: DragStartEvent) {
+    setActiveId(String(e.active.id))
+  }
+
+  function onDragOver({ active, over }: DragOverEvent) {
+    if (!over) return
+    const activeId = String(active.id)
+    const overId = String(over.id)
+    setBoard((prev) => {
+      const activeC = findContainer(prev.items, activeId)
+      const overC = findContainer(prev.items, overId)
+      if (!activeC || !overC || activeC === overC) return prev
+      const activeItems = prev.items[activeC]
+      const overItems = prev.items[overC]
+      const overIndex = overItems.indexOf(overId)
+      const newIndex = overId in prev.items ? overItems.length : Math.max(overIndex, 0)
+      return {
+        ...prev,
+        items: {
+          ...prev.items,
+          [activeC]: activeItems.filter((id) => id !== activeId),
+          [overC]: [...overItems.slice(0, newIndex), activeId, ...overItems.slice(newIndex)],
+        },
+      }
+    })
+  }
+
+  function onDragEnd({ active, over }: DragEndEvent) {
+    setActiveId(null)
+    if (!over) return
+    const activeId = String(active.id)
+    const overId = String(over.id)
+    setBoard((prev) => {
+      const activeC = findContainer(prev.items, activeId)
+      const overC = findContainer(prev.items, overId)
+      if (!activeC || !overC || activeC !== overC) return prev
+      const items = prev.items[activeC]
+      const oldIndex = items.indexOf(activeId)
+      const newIndex = items.indexOf(overId)
+      if (oldIndex === newIndex || newIndex < 0) return prev
+      return {
+        ...prev,
+        items: { ...prev.items, [activeC]: arrayMove(items, oldIndex, newIndex) },
+      }
+    })
+  }
+
+  // --- tier editing ---------------------------------------------------------
+
+  function setLabel(id: string, label: string) {
+    setBoard((p) => ({ ...p, tiers: p.tiers.map((t) => (t.id === id ? { ...t, label } : t)) }))
+  }
+  function setColor(id: string, color: string) {
+    setBoard((p) => ({ ...p, tiers: p.tiers.map((t) => (t.id === id ? { ...t, color } : t)) }))
+  }
+  function removeTier(id: string) {
+    setBoard((p) => {
+      const moved = p.items[id] ?? []
+      const items: Record<string, string[]> = {
+        ...p.items,
+        [UNRANKED]: [...p.items[UNRANKED], ...moved],
+      }
+      delete items[id]
+      return { tiers: p.tiers.filter((t) => t.id !== id), items }
+    })
+  }
+  function addTier() {
+    setBoard((p) => {
+      const id = `t${p.tiers.length}-${p.tiers.reduce((n, t) => n + t.label.length, 0)}`
+      const color = EXTRA_COLORS[p.tiers.length % EXTRA_COLORS.length]
+      const tier: Tier = { id, label: 'nuevo', color }
+      return { tiers: [...p.tiers, tier], items: { ...p.items, [id]: [] } }
+    })
+  }
+
+  const activeTrack = activeId ? trackMap[activeId] : null
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+    >
+      <div ref={exportRef} className="space-y-2 rounded-xl bg-bg p-1">
+        {board.tiers.map((tier) => (
+          <TierRow
+            key={tier.id}
+            tier={tier}
+            trackIds={board.items[tier.id] ?? []}
+            trackMap={trackMap}
+            onInfo={onInfo}
+            onLabel={setLabel}
+            onColor={setColor}
+            onRemove={removeTier}
+            editable={editable}
+          />
+        ))}
+      </div>
+
+      {editable && (
+        <button
+          onClick={addTier}
+          className="mt-2 flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/40 hover:text-white"
+        >
+          <FiPlus size={14} /> añadir tier
+        </button>
+      )}
+
+      <div className="mt-6">
+        <UnrankedTray
+          trackIds={board.items[UNRANKED] ?? []}
+          trackMap={trackMap}
+          onInfo={onInfo}
+        />
+      </div>
+
+      <DragOverlay>
+        {activeTrack ? (
+          <SongCard
+            track={activeTrack}
+            isPlaying={false}
+            onPlay={() => {}}
+            onInfo={() => {}}
+          />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  )
+}
