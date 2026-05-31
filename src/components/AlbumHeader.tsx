@@ -1,11 +1,21 @@
-import { FiCheck, FiDownload, FiInfo, FiRotateCcw, FiShare2 } from 'react-icons/fi'
+import { useState } from 'react'
+import {
+  FiCheck,
+  FiDownload,
+  FiInfo,
+  FiList,
+  FiRotateCcw,
+  FiShare2,
+  FiUsers,
+} from 'react-icons/fi'
 import type { AlbumDetail } from '../lib/types'
 
 interface Props {
   album: AlbumDetail
   copied: boolean
   exporting: boolean
-  onShare: () => void
+  onShareRanking: () => void
+  onShareAlbum: () => void
   onExport: () => void
   onReset: () => void
   onInfo: () => void
@@ -15,11 +25,13 @@ export function AlbumHeader({
   album,
   copied,
   exporting,
-  onShare,
+  onShareRanking,
+  onShareAlbum,
   onExport,
   onReset,
   onInfo,
 }: Props) {
+  const [shareOpen, setShareOpen] = useState(false)
   return (
     <header className="flex flex-col gap-5 sm:flex-row sm:items-end">
       <img
@@ -37,13 +49,61 @@ export function AlbumHeader({
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            onClick={onShare}
-            className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
-          >
-            {copied ? <FiCheck /> : <FiShare2 />}
-            {copied ? 'link copiado' : 'compartir'}
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShareOpen((o) => !o)}
+              className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
+            >
+              {copied ? <FiCheck /> : <FiShare2 />}
+              {copied ? 'link copiado' : 'compartir'}
+            </button>
+            {shareOpen && (
+              <>
+                <button
+                  aria-label="cerrar menú"
+                  className="fixed inset-0 z-10 cursor-default"
+                  onClick={() => setShareOpen(false)}
+                />
+                <div className="absolute left-0 top-full z-20 mt-2 w-60 overflow-hidden rounded-xl border border-white/15 bg-bg shadow-xl">
+                  <button
+                    onClick={() => {
+                      onShareRanking()
+                      setShareOpen(false)
+                    }}
+                    className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5"
+                  >
+                    <FiList className="mt-0.5 shrink-0 text-accent" />
+                    <span>
+                      <span className="block text-sm font-semibold text-white">
+                        mi tier list
+                      </span>
+                      <span className="block text-xs text-white/50">
+                        comparten tu ranking exacto
+                      </span>
+                    </span>
+                  </button>
+                  <div className="h-px bg-white/10" />
+                  <button
+                    onClick={() => {
+                      onShareAlbum()
+                      setShareOpen(false)
+                    }}
+                    className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5"
+                  >
+                    <FiUsers className="mt-0.5 shrink-0 text-accent" />
+                    <span>
+                      <span className="block text-sm font-semibold text-white">
+                        álbum vacío
+                      </span>
+                      <span className="block text-xs text-white/50">
+                        cada uno hace el suyo
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <button
             onClick={onExport}
             disabled={exporting}

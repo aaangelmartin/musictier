@@ -71,19 +71,30 @@ export default function AlbumPage() {
     return m
   }, [album])
 
-  function handleShare() {
-    if (!album || !board) return
-    // encode the current ranking into the link so others see this exact tier list
-    const url = new URL(window.location.href)
-    url.search = ''
-    url.searchParams.set('s', encodeBoard(board, album.tracks))
+  function copyLink(url: string) {
     navigator.clipboard
-      ?.writeText(url.toString())
+      ?.writeText(url)
       .then(() => {
         setCopied(true)
         setTimeout(() => setCopied(false), 1800)
       })
       .catch(() => {})
+  }
+
+  // share the current ranking, encoded into the link
+  function handleShareRanking() {
+    if (!album || !board) return
+    const url = new URL(window.location.href)
+    url.search = ''
+    url.searchParams.set('s', encodeBoard(board, album.tracks))
+    copyLink(url.toString())
+  }
+
+  // share just the album, so each visitor builds their own tier list
+  function handleShareAlbum() {
+    const url = new URL(window.location.href)
+    url.search = ''
+    copyLink(url.toString())
   }
 
   async function handleExport() {
@@ -138,7 +149,8 @@ export default function AlbumPage() {
         album={album}
         copied={copied}
         exporting={exporting}
-        onShare={handleShare}
+        onShareRanking={handleShareRanking}
+        onShareAlbum={handleShareAlbum}
         onExport={handleExport}
         onReset={handleReset}
         onInfo={() => setDetail('album')}
