@@ -184,18 +184,22 @@ function isAlbumOrEp(name: string, trackCount?: number): boolean {
 export async function searchAlbums(term: string): Promise<AlbumSummary[]> {
   if (!term.trim()) return []
   const { source, data } = await getCatalog({ op: 'search', term })
+
   if (source === 'itunes') {
-    const r = (data as { results?: ItunesEntity[] }).results ?? []
-    return r
-      .filter((e) => e.collectionId && isAlbumOrEp(e.collectionName ?? '', e.trackCount))
-      .map(normalizeItunesSummary)
-  }
-  const r = (data as { results?: { albums?: { data?: AppleResource[] } } }).results
-  return (r?.albums?.data ?? [])
-    .filter((a) =>
-      isAlbumOrEp(attr<string>(a, 'name') ?? '', attr<number>(a, 'trackCount')),
+    const all = ((data as { results?: ItunesEntity[] }).results ?? []).filter(
+      (e) => e.collectionId,
     )
-    .map(normalizeAppleSummary)
+    const albums = all.filter((e) => isAlbumOrEp(e.collectionName ?? '', e.trackCount))
+    // if an artist only has singles, show them rather than nothing
+    return (albums.length ? albums : all).map(normalizeItunesSummary)
+  }
+
+  const r = (data as { results?: { albums?: { data?: AppleResource[] } } }).results
+  const all = r?.albums?.data ?? []
+  const albums = all.filter((a) =>
+    isAlbumOrEp(attr<string>(a, 'name') ?? '', attr<number>(a, 'trackCount')),
+  )
+  return (albums.length ? albums : all).map(normalizeAppleSummary)
 }
 
 export async function getAlbum(id: string): Promise<AlbumDetail> {

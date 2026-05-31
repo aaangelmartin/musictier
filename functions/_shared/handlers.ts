@@ -27,20 +27,61 @@ function defaultSource(env: AppleEnv): 'apple' | 'itunes' {
 
 // --- iTunes Search API (no auth) -------------------------------------------
 
-async function itunesSearch(term: string): Promise<unknown> {
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(
-    term,
-  )}&entity=album&media=music&limit=25`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`itunes search ${res.status}`)
-  return res.json()
+interface ItunesRow {
+  wrapperType?: string
+  collectionId?: number
+  artistId?: number
+  [k: string]: unknown
 }
 
-async function itunesAlbum(id: string): Promise<unknown> {
-  const url = `https://itunes.apple.com/lookup?id=${encodeURIComponent(
-    id,
-  )}&entity=song&limit=200`
-  const res = await fetch(url)
+async function itunesGet(path: string): Promise<ItunesRow[]> {
+  const res = await fetch(`https://itunes.apple.com/${path}`)
+  if (!res.ok) throw new Error(`itunes ${res.status}`)
+  const json = (await res.json()) as { results?: ItunesRow[] }
+  return json.results ?? []
+}
+
+// Album-by-term search alone misses an artist's albums (it surfaces singles and
+// is relevance-weak). So we resolve the artist and pull their full discography
+// (the only way albums reliably appear), then append term-matched albums. The
+// client filters singles afterwards.
+async function itunesSearch(term: string, country: string): Promise<unknown> {
+  const enc = encodeURIComponent(term)
+  const c = `country=${country}`
+
+  const [artists, byTerm] = await Promise.all([
+    itunesGet(`search?term=${enc}&entity=musicArtist&limit=3&${c}`),
+    itunesGet(`search?term=${enc}&entity=album&media=music&limit=50&${c}`),
+  ])
+
+  const artistIds = artists.map((a) => a.artistId).filter(Boolean) as number[]
+  const discographies = await Promise.all(
+    artistIds.map((id) =>
+      itunesGet(`lookup?id=${id}&entity=album&limit=100&${c}`).catch(() => []),
+    ),
+  )
+
+  // discography collections first (the real albums), then term matches
+  const merged: ItunesRow[] = [
+    ...discographies.flat().filter((r) => r.wrapperType === 'collection'),
+    ...byTerm.filter((r) => r.collectionId),
+  ]
+
+  const seen = new Set<number>()
+  const results = merged.filter((r) => {
+    if (!r.collectionId || seen.has(r.collectionId)) return false
+    seen.add(r.collectionId)
+    return true
+  })
+  return { resultCount: results.length, results }
+}
+
+async function itunesAlbum(id: string, country: string): Promise<unknown> {
+  const res = await fetch(
+    `https://itunes.apple.com/lookup?id=${encodeURIComponent(
+      id,
+    )}&entity=song&limit=200&country=${country}`,
+  )
   if (!res.ok) throw new Error(`itunes lookup ${res.status}`)
   return res.json()
 }
@@ -48,7 +89,7 @@ async function itunesAlbum(id: string): Promise<unknown> {
 // --- Apple Music API (developer token) -------------------------------------
 
 function storefront(url: URL): string {
-  return (url.searchParams.get('sf') || 'us').toLowerCase()
+  return (url.searchParams.get('sf') || 'es').toLowerCase()
 }
 
 async function appleSearch(term: string, sf: string, token: string): Promise<unknown> {
@@ -83,7 +124,7 @@ async function handleCatalog(url: URL, env: AppleEnv, now: number): Promise<Resp
       const data = await appleSearch(term, storefront(url), token)
       return json({ source, data })
     }
-    return json({ source, data: await itunesSearch(term) })
+    return json({ source, data: await itunesSearch(term, storefront(url)) })
   }
 
   if (op === 'album') {
@@ -99,7 +140,7 @@ async function handleCatalog(url: URL, env: AppleEnv, now: number): Promise<Resp
       const data = await appleAlbum(rawId, storefront(url), token)
       return json({ source, data })
     }
-    return json({ source: 'itunes', data: await itunesAlbum(rawId) })
+    return json({ source: 'itunes', data: await itunesAlbum(rawId, storefront(url)) })
   }
 
   return json({ error: 'unknown op' }, 400)
