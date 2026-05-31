@@ -13,10 +13,37 @@ interface ItunesRow {
   [k: string]: unknown
 }
 
+// In-memory cache + retry. iTunes rate-limits bursts and then returns errors
+// without CORS headers, which the browser surfaces as a "Load failed" fetch
+// rejection. Caching dedupes repeats; a couple of spaced retries ride out a
+// transient throttle so opening an album does not fail.
+const cache = new Map<string, Promise<unknown>>()
+
+function fetchJson(path: string): Promise<unknown> {
+  const url = `https://itunes.apple.com/${path}`
+  const hit = cache.get(url)
+  if (hit) return hit
+  const run = (async () => {
+    let lastErr: unknown
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(url)
+        if (res.ok) return await res.json()
+        lastErr = new Error(`itunes ${res.status}`)
+      } catch (e) {
+        lastErr = e
+      }
+      await new Promise((r) => setTimeout(r, 400 * (attempt + 1)))
+    }
+    throw lastErr
+  })()
+  cache.set(url, run)
+  run.catch(() => cache.delete(url)) // never cache a failure
+  return run
+}
+
 async function get(path: string): Promise<ItunesRow[]> {
-  const res = await fetch(`https://itunes.apple.com/${path}`)
-  if (!res.ok) throw new Error(`itunes ${res.status}`)
-  const data = (await res.json()) as { results?: ItunesRow[] }
+  const data = (await fetchJson(path)) as { results?: ItunesRow[] }
   return data.results ?? []
 }
 
@@ -55,12 +82,16 @@ export async function clientSearch(term: string, country = 'es') {
   // 0). A song search resolves the album via its tracks, and an artist search
   // pulls full discographies. We pool all three and rank by relevance.
   const [artists, byTerm, songs] = await Promise.all([
-    get(`search?term=${enc}&entity=musicArtist&limit=3&${c}`),
-    get(`search?term=${enc}&entity=album&media=music&limit=50&${c}`),
-    get(`search?term=${enc}&entity=song&limit=25&${c}`),
+    get(`search?term=${enc}&entity=musicArtist&limit=2&${c}`),
+    get(`search?term=${enc}&entity=album&media=music&limit=25&${c}`),
+    get(`search?term=${enc}&entity=song&limit=15&${c}`),
   ])
 
-  const artistIds = artists.map((a) => a.artistId).filter(Boolean) as number[]
+  // only the top artist's discography, to keep the request count low
+  const artistIds = (artists.map((a) => a.artistId).filter(Boolean) as number[]).slice(
+    0,
+    1,
+  )
   const discographies = await Promise.all(
     artistIds.map((id) =>
       get(`lookup?id=${id}&entity=album&limit=100&${c}`).catch(() => []),
@@ -93,11 +124,7 @@ export async function clientSearch(term: string, country = 'es') {
 
 export async function clientAlbum(taggedId: string, country = 'es') {
   const raw = taggedId.includes(':') ? taggedId.split(/:(.+)/)[1] : taggedId
-  const res = await fetch(
-    `https://itunes.apple.com/lookup?id=${encodeURIComponent(
-      raw,
-    )}&entity=song&limit=200&country=${country}`,
+  return fetchJson(
+    `lookup?id=${encodeURIComponent(raw)}&entity=song&limit=200&country=${country}`,
   )
-  if (!res.ok) throw new Error(`itunes ${res.status}`)
-  return res.json()
 }
