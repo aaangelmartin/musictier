@@ -33,13 +33,13 @@ export function AlbumHeader({
         </h1>
         <p className="normal-case mt-1 text-white/60">
           {album.artistName}
-          {album.year ? ` · ${album.year}` : ''} · {album.tracks.length} canciones
+          {album.year ? ` - ${album.year}` : ''} - {album.tracks.length} canciones
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             onClick={onShare}
-            className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
+            className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
           >
             {copied ? <FiCheck /> : <FiShare2 />}
             {copied ? 'link copiado' : 'compartir'}

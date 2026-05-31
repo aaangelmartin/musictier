@@ -67,7 +67,7 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
             {track?.previewUrl && (
               <button
                 onClick={() => togglePreview(track.id, track.previewUrl)}
-                className="mt-4 flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
+                className="mt-4 flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
               >
                 {playingId === track.id ? <FiPause /> : <FiPlay />}
                 {playingId === track.id ? 'pausar preview' : 'preview 30s'}
