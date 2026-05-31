@@ -1,8 +1,8 @@
-// Backend-free iTunes access for static hosting (e.g. GitHub Pages), where our
-// /api proxy does not run. The iTunes Search API supports CORS (it reflects the
-// request Origin), so a plain fetch works from the browser, including mobile
-// Safari (JSONP failed there because of strict script MIME checking). Mirrors the
-// artist-discography logic in functions/_shared/handlers.ts so results match.
+// iTunes Search access straight from the browser (no backend, no login). The API
+// supports CORS (it reflects the request Origin), so a plain fetch works
+// everywhere, including mobile Safari. We pool an artist search (for full
+// discographies), an album-by-term search, and a song search (to resolve albums
+// that album-term misses), then rank the pool by relevance to the query.
 
 interface ItunesRow {
   wrapperType?: string

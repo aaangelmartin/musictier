@@ -5,7 +5,7 @@ export function Footer() {
       <div className="flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center">
         <span className="text-sm font-bold text-accent">musictier.</span>
         <p className="text-xs text-white/40">
-          haz tier lists de cualquier álbum. datos de apple music / itunes.
+          haz tier lists de cualquier álbum. datos vía itunes.
         </p>
         <p className="text-xs text-white/30">
           por{' '}

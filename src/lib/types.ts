@@ -1,7 +1,7 @@
-// Unified domain types. Both the Apple Music and iTunes responses are mapped
-// onto these in lib/api.ts so the rest of the app never branches on source.
+// Unified domain types. iTunes Search API responses are normalized onto these
+// in lib/api.ts so the rest of the app never deals with the raw payloads.
 
-export type Source = 'apple' | 'itunes'
+export type Source = 'itunes'
 
 export interface AlbumSummary {
   /** source-tagged id, e.g. "itunes:1440913508", used in /a/:id share links */

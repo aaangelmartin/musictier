@@ -107,7 +107,7 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
                 rel="noreferrer"
                 className="mt-5 text-center text-sm text-accent underline-offset-4 hover:underline"
               >
-                abrir en apple music
+                abrir álbum
               </a>
             )}
           </motion.aside>
