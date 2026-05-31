@@ -178,7 +178,7 @@ export async function exportBoard({
   ctx.textAlign = 'right'
   ctx.fillStyle = '#00b5e2'
   ctx.font = '700 22px Outfit, sans-serif'
-  ctx.fillText('tier maker.', W - PAD, midY - 4)
+  ctx.fillText('musictier.', W - PAD, midY - 4)
   ctx.fillStyle = 'rgba(255,255,255,0.4)'
   ctx.font = '500 13px Outfit, sans-serif'
   ctx.fillText('aaangelmartin.com', W - PAD, midY + 18)

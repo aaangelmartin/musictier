@@ -12,7 +12,7 @@ export function TopBar() {
           to="/"
           className="text-base font-bold tracking-tight text-accent transition-opacity hover:opacity-80"
         >
-          tier maker.
+          musictier.
         </Link>
 
         {!onHome && (

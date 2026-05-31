@@ -1,4 +1,4 @@
-# tier maker - aaa.
+# musictier - aaa.
 
 busca un álbum, ordena sus canciones por tiers, descífralo y comparte el link para que
 otros hagan el suyo. estética de marca `aaa.` en modo oscuro (`#0a0a0a`, acento cian).
@@ -59,7 +59,7 @@ se firma en el servidor (ES256) y **nunca** llega al cliente.
 el workflow `.github/workflows/deploy.yml` construye y publica en cada push a `main`. en
 hosting estático no hay backend, así que el cliente habla con itunes directamente (jsonp) y
 el export usa images.weserv.nl para el artwork. la búsqueda, las tier lists, las previews y
-el export funcionan sin servidor. url: `https://aaangelmartin.github.io/MusicTierMaker/`.
+el export funcionan sin servidor. url: `https://aaangelmartin.com/musictier/`.
 
 ### cloudflare pages (opcional, para apple music)
 

@@ -3,7 +3,7 @@ export function Footer() {
   return (
     <footer className="mx-auto mt-auto w-full max-w-5xl px-4 pb-10 pt-16 md:px-6">
       <div className="flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center">
-        <span className="text-sm font-bold text-accent">tier maker.</span>
+        <span className="text-sm font-bold text-accent">musictier.</span>
         <p className="text-xs text-white/40">
           haz tier lists de cualquier álbum. datos de apple music / itunes.
         </p>
