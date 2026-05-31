@@ -259,6 +259,7 @@ export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props
           trackIds={board.items[UNRANKED] ?? []}
           trackMap={trackMap}
           onInfo={onInfo}
+          editable={editable}
         />
       </div>
 

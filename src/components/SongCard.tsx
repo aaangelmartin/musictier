@@ -9,22 +9,23 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   onPlay: () => void
   onInfo: () => void
   dragging?: boolean
+  canDrag?: boolean
   style?: CSSProperties
 }
 
 // Square album-art card with the title overlaid. The PNG export is rendered
 // separately on a canvas, so these controls never appear in the exported image.
 export const SongCard = forwardRef<HTMLDivElement, Props>(function SongCard(
-  { track, isPlaying, onPlay, onInfo, dragging, style, ...rest },
+  { track, isPlaying, onPlay, onInfo, dragging, canDrag = true, style, ...rest },
   ref,
 ) {
   return (
     <div
       ref={ref}
       style={{ touchAction: 'none', ...style }}
-      className={`group relative aspect-square w-full cursor-grab select-none overflow-hidden rounded-lg border border-white/10 bg-white/5 active:cursor-grabbing ${
-        dragging ? 'opacity-40' : ''
-      }`}
+      className={`group relative aspect-square w-full select-none overflow-hidden rounded-lg border border-white/10 bg-white/5 ${
+        canDrag ? 'cursor-grab active:cursor-grabbing' : ''
+      } ${dragging ? 'opacity-40' : ''}`}
       {...rest}
     >
       {track.artworkUrl && (

@@ -27,16 +27,19 @@ export default function AlbumPage() {
   const [detail, setDetail] = useState<Track | 'album' | null>(null)
   const [copied, setCopied] = useState(false)
   const [exporting, setExporting] = useState(false)
+  // a shared link opens read-only until the visitor "remixes" it into their copy
+  const [readOnly, setReadOnly] = useState(false)
 
   // capture a shared (?s=) board once, before it is stripped from the url
   const sharedCode = useRef(searchParams.get('s'))
 
-  // load album + its board: a shared ?s= ranking wins, else the saved/fresh one
+  // load album + its board: a shared ?s= ranking opens read-only, else saved/fresh
   useEffect(() => {
     let alive = true
     setAlbum(null)
     setError(undefined)
     setBoard(null)
+    setReadOnly(false)
     stopPreview()
     getAlbum(albumId)
       .then((a) => {
@@ -47,10 +50,7 @@ export default function AlbumPage() {
           : null
         if (shared) {
           setBoard(shared)
-          saveBoard(a.id, shared)
-          // drop ?s= so refreshes and edits use the local copy
-          setSearchParams({}, { replace: true })
-          sharedCode.current = null
+          setReadOnly(true)
         } else {
           setBoard(loadBoard(a.id, a.tracks))
         }
@@ -62,9 +62,16 @@ export default function AlbumPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [albumId])
 
-  // persist on every board change, and record it in "my tier lists" once ranked
+  // turn the shared (read-only) list into the visitor's own editable copy
+  function handleRemix() {
+    setReadOnly(false)
+    sharedCode.current = null
+    setSearchParams({}, { replace: true })
+  }
+
+  // persist on every board change (not while previewing someone else's shared list)
   useEffect(() => {
-    if (!album || !board) return
+    if (!album || !board || readOnly) return
     saveBoard(album.id, board)
     const unranked = board.items[UNRANKED]?.length ?? 0
     const ranked = album.tracks.length - unranked
@@ -79,7 +86,7 @@ export default function AlbumPage() {
         total: album.tracks.length,
       })
     }
-  }, [album, board])
+  }, [album, board, readOnly])
 
   const trackMap = useMemo(() => {
     const m: Record<string, Track> = {}
@@ -184,6 +191,7 @@ export default function AlbumPage() {
         album={album}
         copied={copied}
         exporting={exporting}
+        editable={!readOnly}
         canShareImage={canShareImage()}
         onShareRanking={handleShareRanking}
         onShareAlbum={handleShareAlbum}
@@ -193,13 +201,27 @@ export default function AlbumPage() {
         onInfo={() => setDetail('album')}
       />
 
+      {readOnly && (
+        <div className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="normal-case text-sm text-white/80">
+            estás viendo una tier list compartida. remézclala para crear la tuya.
+          </p>
+          <button
+            onClick={handleRemix}
+            className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
+          >
+            remixar
+          </button>
+        </div>
+      )}
+
       <div className="mt-8">
         <TierBoard
           board={board}
           setBoard={setBoard as React.Dispatch<React.SetStateAction<BoardState>>}
           trackMap={trackMap}
           onInfo={(t) => setDetail(t)}
-          editable
+          editable={!readOnly}
         />
       </div>
 

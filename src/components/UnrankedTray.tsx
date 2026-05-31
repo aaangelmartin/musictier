@@ -8,9 +8,10 @@ interface Props {
   trackIds: string[]
   trackMap: Record<string, Track>
   onInfo: (t: Track) => void
+  editable: boolean
 }
 
-export function UnrankedTray({ trackIds, trackMap, onInfo }: Props) {
+export function UnrankedTray({ trackIds, trackMap, onInfo, editable }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: UNRANKED })
 
   return (
@@ -31,6 +32,7 @@ export function UnrankedTray({ trackIds, trackMap, onInfo }: Props) {
                   track={trackMap[id]}
                   containerId={UNRANKED}
                   onInfo={onInfo}
+                  editable={editable}
                 />
               ) : null,
             )}

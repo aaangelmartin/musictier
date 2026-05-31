@@ -15,6 +15,7 @@ interface Props {
   album: AlbumDetail
   copied: boolean
   exporting: boolean
+  editable: boolean
   canShareImage: boolean
   onShareRanking: () => void
   onShareAlbum: () => void
@@ -28,6 +29,7 @@ export function AlbumHeader({
   album,
   copied,
   exporting,
+  editable,
   canShareImage,
   onShareRanking,
   onShareAlbum,
@@ -147,14 +149,16 @@ export function AlbumHeader({
             <FiInfo />
             descifrar
           </button>
-          <button
-            onClick={onReset}
-            aria-label="reiniciar tier list"
-            className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white/60 transition-colors hover:border-white/60 hover:text-white"
-          >
-            <FiRotateCcw />
-            reiniciar
-          </button>
+          {editable && (
+            <button
+              onClick={onReset}
+              aria-label="reiniciar tier list"
+              className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white/60 transition-colors hover:border-white/60 hover:text-white"
+            >
+              <FiRotateCcw />
+              reiniciar
+            </button>
+          )}
         </div>
       </div>
     </header>

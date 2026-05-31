@@ -118,6 +118,7 @@ export function TierRow({
                   track={trackMap[id]}
                   containerId={tier.id}
                   onInfo={onInfo}
+                  editable={editable}
                 />
               ) : null,
             )}
