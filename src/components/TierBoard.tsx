@@ -6,9 +6,11 @@ import {
   MeasuringStrategy,
   MouseSensor,
   TouchSensor,
-  closestCorners,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -33,6 +35,14 @@ interface Props {
 function findContainer(items: Record<string, string[]>, id: string): string | undefined {
   if (id in items) return id
   return Object.keys(items).find((c) => items[c].includes(id))
+}
+
+// Drop where the pointer actually is. pointerWithin makes every tier (and the
+// unranked tray) a valid target under the cursor/finger; rectIntersection is a
+// fallback for when the pointer is between elements.
+const collision: CollisionDetection = (args) => {
+  const within = pointerWithin(args)
+  return within.length ? within : rectIntersection(args)
 }
 
 export function TierBoard({
@@ -145,7 +155,7 @@ export function TierBoard({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={collision}
       // re-measure droppable rects continuously: tiers resize as cards move
       // between them, otherwise only the row whose rect stayed put accepts drops
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
