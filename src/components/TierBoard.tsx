@@ -16,11 +16,17 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { FiPlus } from 'react-icons/fi'
+import { FiGrid, FiPlus } from 'react-icons/fi'
 import { TierRow } from './TierRow'
 import { UnrankedTray } from './UnrankedTray'
 import { SongCard } from './SongCard'
-import { EXTRA_COLORS, UNRANKED, type BoardState, type Tier } from '../lib/tierStorage'
+import {
+  EXTRA_COLORS,
+  TIER_PRESETS,
+  UNRANKED,
+  type BoardState,
+  type Tier,
+} from '../lib/tierStorage'
 import type { Track } from '../lib/types'
 
 interface Props {
@@ -46,6 +52,7 @@ const collision: CollisionDetection = (args) => {
 
 export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [presetsOpen, setPresetsOpen] = useState(false)
   // Mouse: small drag threshold so taps still click buttons. Touch: press-and-
   // hold so a finger drag does not fight page scroll (cards also set
   // touch-action: none). Keyboard for accessibility.
@@ -141,6 +148,25 @@ export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props
       return { tiers: [...p.tiers, tier], items: { ...p.items, [id]: [] } }
     })
   }
+  function moveTier(id: string, dir: -1 | 1) {
+    setBoard((p) => {
+      const i = p.tiers.findIndex((t) => t.id === id)
+      const j = i + dir
+      if (i < 0 || j < 0 || j >= p.tiers.length) return p
+      const tiers = [...p.tiers]
+      ;[tiers[i], tiers[j]] = [tiers[j], tiers[i]]
+      return { ...p, tiers }
+    })
+  }
+  function applyPreset(preset: (typeof TIER_PRESETS)[number]) {
+    setBoard((p) => {
+      const allIds = Object.values(p.items).flat()
+      const tiers: Tier[] = preset.tiers.map((t, i) => ({ id: `t${i}`, ...t }))
+      const items: Record<string, string[]> = { [UNRANKED]: allIds }
+      tiers.forEach((t) => (items[t.id] = []))
+      return { tiers, items }
+    })
+  }
 
   const activeTrack = activeId ? trackMap[activeId] : null
 
@@ -156,7 +182,7 @@ export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props
       onDragEnd={onDragEnd}
     >
       <div className="space-y-2 rounded-xl bg-bg p-1">
-        {board.tiers.map((tier) => (
+        {board.tiers.map((tier, i) => (
           <TierRow
             key={tier.id}
             tier={tier}
@@ -166,18 +192,66 @@ export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props
             onLabel={setLabel}
             onColor={setColor}
             onRemove={removeTier}
+            onMove={moveTier}
+            isFirst={i === 0}
+            isLast={i === board.tiers.length - 1}
             editable={editable}
           />
         ))}
       </div>
 
       {editable && (
-        <button
-          onClick={addTier}
-          className="mt-2 flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/40 hover:text-white"
-        >
-          <FiPlus size={14} /> añadir tier
-        </button>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            onClick={addTier}
+            className="flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/40 hover:text-white"
+          >
+            <FiPlus size={14} /> añadir tier
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => setPresetsOpen((o) => !o)}
+              className="flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/40 hover:text-white"
+            >
+              <FiGrid size={14} /> plantilla
+            </button>
+            {presetsOpen && (
+              <>
+                <button
+                  aria-label="cerrar"
+                  className="fixed inset-0 z-10 cursor-default"
+                  onClick={() => setPresetsOpen(false)}
+                />
+                <div className="absolute left-0 top-full z-20 mt-2 w-44 overflow-hidden rounded-xl border border-white/15 bg-bg shadow-xl">
+                  {TIER_PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => {
+                        applyPreset(preset)
+                        setPresetsOpen(false)
+                      }}
+                      className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-sm text-white transition-colors hover:bg-white/5"
+                    >
+                      {preset.name}
+                      <span className="flex gap-0.5">
+                        {preset.tiers.slice(0, 6).map((t, k) => (
+                          <span
+                            key={k}
+                            className="h-3 w-3 rounded-sm"
+                            style={{ backgroundColor: t.color }}
+                          />
+                        ))}
+                      </span>
+                    </button>
+                  ))}
+                  <p className="border-t border-white/10 px-4 py-2 text-xs text-white/40">
+                    reinicia las posiciones
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="mt-6">

@@ -37,10 +37,49 @@ export interface BoardState {
 
 const KEY = (albumId: string) => `tier:${albumId}`
 
-export function freshBoard(tracks: Track[]): BoardState {
+// named tier templates the user can apply to a board
+export const TIER_PRESETS: { name: string; tiers: Omit<Tier, 'id'>[] }[] = [
+  { name: 'clásico', tiers: DEFAULT_TIERS.map(({ label, color }) => ({ label, color })) },
+  {
+    name: 'con f',
+    tiers: [
+      ...DEFAULT_TIERS.map(({ label, color }) => ({ label, color })),
+      { label: 'F', color: '#9b6bff' },
+    ],
+  },
+  {
+    name: 'numérico',
+    tiers: [
+      { label: '5', color: '#ff5c5c' },
+      { label: '4', color: '#ff9f43' },
+      { label: '3', color: '#ffd93d' },
+      { label: '2', color: '#6bcb77' },
+      { label: '1', color: '#4d96ff' },
+    ],
+  },
+  {
+    name: 'simple',
+    tiers: [
+      { label: 'fav', color: '#ff5c5c' },
+      { label: 'mid', color: '#ffd93d' },
+      { label: 'skip', color: '#7d8597' },
+    ],
+  },
+]
+
+/** Build an empty board with the given tiers (all tracks start unranked). */
+export function boardFromTiers(tiers: Omit<Tier, 'id'>[], tracks: Track[]): BoardState {
+  const withIds: Tier[] = tiers.map((t, i) => ({ id: `t${i}`, ...t }))
   const items: Record<string, string[]> = { [UNRANKED]: tracks.map((t) => t.id) }
-  for (const tier of DEFAULT_TIERS) items[tier.id] = []
-  return { tiers: DEFAULT_TIERS.map((t) => ({ ...t })), items }
+  for (const tier of withIds) items[tier.id] = []
+  return { tiers: withIds, items }
+}
+
+export function freshBoard(tracks: Track[]): BoardState {
+  return boardFromTiers(
+    DEFAULT_TIERS.map(({ label, color }) => ({ label, color })),
+    tracks,
+  )
 }
 
 /** Load saved board, reconciling against the album's current track list. */

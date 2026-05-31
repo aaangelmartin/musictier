@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { FiDroplet, FiTrash2 } from 'react-icons/fi'
+import { FiChevronDown, FiChevronUp, FiDroplet, FiTrash2 } from 'react-icons/fi'
 import { SortableSongCard } from './SortableSongCard'
 import type { Tier } from '../lib/tierStorage'
 import type { Track } from '../lib/types'
@@ -13,6 +13,9 @@ interface Props {
   onLabel: (id: string, label: string) => void
   onColor: (id: string, color: string) => void
   onRemove: (id: string) => void
+  onMove: (id: string, dir: -1 | 1) => void
+  isFirst: boolean
+  isLast: boolean
   editable: boolean
 }
 
@@ -24,6 +27,9 @@ export function TierRow({
   onLabel,
   onColor,
   onRemove,
+  onMove,
+  isFirst,
+  isLast,
   editable,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: tier.id })
@@ -51,13 +57,31 @@ export function TierRow({
         )}
 
         {editable && (
-          <div className="absolute bottom-2 flex items-center gap-3">
+          <div className="absolute bottom-2 flex items-center gap-2.5">
+            <button
+              onClick={() => onMove(tier.id, -1)}
+              disabled={isFirst}
+              aria-label="subir tier"
+              title="subir"
+              className="text-black/60 transition-colors hover:text-black disabled:opacity-25"
+            >
+              <FiChevronUp size={15} />
+            </button>
+            <button
+              onClick={() => onMove(tier.id, 1)}
+              disabled={isLast}
+              aria-label="bajar tier"
+              title="bajar"
+              className="text-black/60 transition-colors hover:text-black disabled:opacity-25"
+            >
+              <FiChevronDown size={15} />
+            </button>
             {/* droplet opens the native colour picker (reliable, never clipped) */}
             <label
               className="cursor-pointer text-black/60 transition-colors hover:text-black"
               title="cambiar color"
             >
-              <FiDroplet size={15} />
+              <FiDroplet size={14} />
               <input
                 type="color"
                 value={tier.color}
@@ -72,7 +96,7 @@ export function TierRow({
               title="eliminar tier"
               className="text-black/60 transition-colors hover:text-black"
             >
-              <FiTrash2 size={15} />
+              <FiTrash2 size={14} />
             </button>
           </div>
         )}
