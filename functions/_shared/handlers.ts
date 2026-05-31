@@ -55,17 +55,18 @@ function norm(s: string): string {
     .trim()
 }
 
-// rank so an album whose title matches the query beats an artist's other albums
-function relevance(row: ItunesRow, q: string): number {
+// Token-coverage relevance: how many query words appear in "name + artist".
+// Handles album-only, artist-only and mixed "album artist" queries.
+function relevance(row: ItunesRow, tokens: string[], full: string): number {
   const name = norm(row.collectionName ?? '')
   const artist = norm(row.artistName ?? '')
-  let s = 0
-  if (name === q) s += 100
-  else if (name.startsWith(q)) s += 55
-  else if (name.includes(q)) s += 40
-  // exact artist match (artist query) must beat an incidental title mention
-  if (artist === q) s += 70
-  else if (artist.includes(q)) s += 25
+  const hay = `${name} ${artist}`
+  const matched = tokens.filter((t) => hay.includes(t)).length
+  let s = tokens.length ? (matched / tokens.length) * 100 : 0
+  if (name === full) s += 60
+  else if (name.length >= 3 && full.includes(name)) s += 30
+  if (artist === full) s += 40
+  else if (artist.length >= 3 && full.includes(artist)) s += 20
   return s
 }
 
@@ -77,9 +78,12 @@ async function itunesSearch(term: string, country: string): Promise<unknown> {
   const enc = encodeURIComponent(term)
   const c = `country=${country}`
 
-  const [artists, byTerm] = await Promise.all([
+  // album-by-term often misses an album; a song search resolves it via its
+  // tracks, and an artist search pulls full discographies. Pool all three.
+  const [artists, byTerm, songs] = await Promise.all([
     itunesGet(`search?term=${enc}&entity=musicArtist&limit=3&${c}`),
     itunesGet(`search?term=${enc}&entity=album&media=music&limit=50&${c}`),
+    itunesGet(`search?term=${enc}&entity=song&limit=25&${c}`),
   ])
 
   const artistIds = artists.map((a) => a.artistId).filter(Boolean) as number[]
@@ -89,10 +93,11 @@ async function itunesSearch(term: string, country: string): Promise<unknown> {
     ),
   )
 
-  // discography collections first (the real albums), then term matches
+  // song rows carry their album's collection fields, so they normalize as albums
   const merged: ItunesRow[] = [
     ...discographies.flat().filter((r) => r.wrapperType === 'collection'),
     ...byTerm.filter((r) => r.collectionId),
+    ...songs.filter((r) => r.collectionId),
   ]
 
   const seen = new Set<number>()
@@ -102,10 +107,11 @@ async function itunesSearch(term: string, country: string): Promise<unknown> {
     return true
   })
 
-  // stable sort by relevance to the query (album-title matches rise to the top)
-  const q = norm(term)
+  // stable sort by relevance to the query
+  const full = norm(term)
+  const tokens = full.split(' ').filter((t) => t.length >= 2)
   results
-    .map((r, i) => ({ r, i, s: relevance(r, q) }))
+    .map((r, i) => ({ r, i, s: relevance(r, tokens, full) }))
     .sort((a, b) => b.s - a.s || a.i - b.i)
     .forEach((x, i) => (results[i] = x.r))
 
