@@ -12,8 +12,8 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   style?: CSSProperties
 }
 
-// Square album-art card with the title overlaid. The play/info controls are
-// marked data-export-hide so they are removed from the exported PNG.
+// Square album-art card with the title overlaid. The PNG export is rendered
+// separately on a canvas, so these controls never appear in the exported image.
 export const SongCard = forwardRef<HTMLDivElement, Props>(function SongCard(
   { track, isPlaying, onPlay, onInfo, dragging, style, ...rest },
   ref,
@@ -44,10 +44,7 @@ export const SongCard = forwardRef<HTMLDivElement, Props>(function SongCard(
         {track.name}
       </span>
 
-      <div
-        data-export-hide
-        className="absolute right-1.5 top-1.5 flex gap-1 opacity-80 transition-opacity group-hover:opacity-100"
-      >
+      <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-80 transition-opacity group-hover:opacity-100">
         <button
           onPointerDown={(e) => e.stopPropagation()}
           onClick={onPlay}
@@ -68,10 +65,7 @@ export const SongCard = forwardRef<HTMLDivElement, Props>(function SongCard(
       </div>
 
       {isPlaying && (
-        <span
-          data-export-hide
-          className="absolute left-1.5 top-1.5 h-2 w-2 rounded-full bg-accent"
-        />
+        <span className="absolute left-1.5 top-1.5 h-2 w-2 rounded-full bg-accent" />
       )}
     </div>
   )

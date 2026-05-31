@@ -52,8 +52,17 @@ wrangler pages secret put MUSICKIT_PRIVATE_KEY   # pega el contenido del .p8
 en local, expórtalas como variables de entorno antes de `npm run dev`. el developer token
 se firma en el servidor (ES256) y **nunca** llega al cliente.
 
-## deploy (cloudflare pages)
+## deploy
 
-build command `npm run build`, output `dist`. las funciones en `/functions` se despliegan
-solas. la reproducción completa para suscriptores de apple music (login con musickit js)
-queda como fase posterior.
+### github pages (por defecto)
+
+el workflow `.github/workflows/deploy.yml` construye y publica en cada push a `main`. en
+hosting estático no hay backend, así que el cliente habla con itunes directamente (jsonp) y
+el export usa images.weserv.nl para el artwork. la búsqueda, las tier lists, las previews y
+el export funcionan sin servidor. url: `https://aaangelmartin.github.io/MusicTierMaker/`.
+
+### cloudflare pages (opcional, para apple music)
+
+build `npm run build`, output `dist`. las funciones en `/functions` se despliegan solas y,
+con las credenciales de apple, dan metadata más rica. la reproducción completa para
+suscriptores (login con musickit js) queda como fase posterior.
