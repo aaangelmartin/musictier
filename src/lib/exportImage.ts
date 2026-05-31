@@ -219,13 +219,14 @@ export async function exportBoard({
       ctx.fillRect(cx, cy, CARD, CARD)
       // title
       const name = trackMap[id]?.name ?? ''
-      ctx.font = '600 11px Outfit, sans-serif'
+      ctx.font = '600 13px Outfit, sans-serif'
       ctx.fillStyle = '#ffffff'
-      const lines = wrapLines(ctx, name, CARD - 12, 3)
-      let ty = cy + CARD - 7 - (lines.length - 1) * 12
+      const lineH = 15
+      const lines = wrapLines(ctx, name, CARD - 14, 3)
+      let ty = cy + CARD - 8 - (lines.length - 1) * lineH
       for (const line of lines) {
-        ctx.fillText(line, cx + 6, ty)
-        ty += 12
+        ctx.fillText(line, cx + 7, ty)
+        ty += lineH
       }
       ctx.restore()
     })

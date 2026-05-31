@@ -30,9 +30,9 @@ export function TierRow({
 
   return (
     <div className="flex items-start gap-2">
-      {/* square 1:1 header, matching the album cards */}
+      {/* square 1:1 header, exactly the size of the song cards */}
       <div
-        className="relative flex aspect-square w-24 shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg"
+        className="relative flex h-[104px] w-[104px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg"
         style={{ backgroundColor: tier.color }}
       >
         {editable ? (
@@ -79,12 +79,12 @@ export function TierRow({
       {/* drop area */}
       <div
         ref={setNodeRef}
-        className={`min-h-24 flex-1 rounded-lg border p-2 transition-colors ${
+        className={`min-h-[104px] flex-1 rounded-lg border p-2 transition-colors ${
           isOver ? 'border-accent/60 bg-accent/15' : 'border-white/10 bg-white/[0.03]'
         }`}
       >
         <SortableContext items={trackIds} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-2">
+          <div className="grid grid-cols-[repeat(auto-fill,104px)] justify-start gap-2">
             {trackIds.map((id) =>
               trackMap[id] ? (
                 <SortableSongCard
