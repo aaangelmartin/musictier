@@ -1,0 +1,18 @@
+{
+  "name": "musictier",
+  "short_name": "musictier",
+  "description": "rankea las canciones de cualquier álbum",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
