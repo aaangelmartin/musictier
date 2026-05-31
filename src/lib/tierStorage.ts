@@ -84,3 +84,70 @@ export function resetBoard(albumId: string, tracks: Track[]): BoardState {
   saveBoard(albumId, board)
   return board
 }
+
+// --- shareable encoding ----------------------------------------------------
+// Encode the whole tier list into a compact, URL-safe string so a link can
+// carry someone's exact ranking. Tracks are referenced by their index in the
+// album (stable per source), keeping the payload small.
+
+function toB64Url(s: string): string {
+  const bytes = new TextEncoder().encode(s)
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function fromB64Url(s: string): string {
+  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'))
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
+}
+
+interface SharePayload {
+  v: 1
+  t: [string, string][] // tiers as [label, color]
+  p: number[][] // p[i] = ordered track indices in tier i
+}
+
+export function encodeBoard(board: BoardState, tracks: Track[]): string {
+  const idx = new Map(tracks.map((t, i) => [t.id, i]))
+  const payload: SharePayload = {
+    v: 1,
+    t: board.tiers.map((tier) => [tier.label, tier.color]),
+    p: board.tiers.map((tier) =>
+      (board.items[tier.id] ?? [])
+        .map((id) => idx.get(id))
+        .filter((i): i is number => i !== undefined),
+    ),
+  }
+  return toB64Url(JSON.stringify(payload))
+}
+
+export function decodeBoard(code: string, tracks: Track[]): BoardState | null {
+  try {
+    const payload = JSON.parse(fromB64Url(code)) as SharePayload
+    if (payload.v !== 1 || !Array.isArray(payload.t) || !Array.isArray(payload.p)) {
+      return null
+    }
+    const tiers: Tier[] = payload.t.map(([label, color], i) => ({
+      id: `s${i}`,
+      label: String(label).slice(0, 6),
+      color: String(color),
+    }))
+    if (!tiers.length) return null
+
+    const items: Record<string, string[]> = {}
+    const placed = new Set<string>()
+    tiers.forEach((tier, i) => {
+      const ids = (payload.p[i] ?? [])
+        .map((n) => tracks[n]?.id)
+        .filter((id): id is string => Boolean(id) && !placed.has(id))
+      ids.forEach((id) => placed.add(id))
+      items[tier.id] = ids
+    })
+    items[UNRANKED] = tracks.filter((t) => !placed.has(t.id)).map((t) => t.id)
+    return { tiers, items }
+  } catch {
+    return null
+  }
+}

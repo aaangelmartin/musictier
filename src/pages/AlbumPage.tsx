@@ -1,16 +1,24 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AlbumHeader } from '../components/AlbumHeader'
 import { TierBoard } from '../components/TierBoard'
 import { DetailDrawer } from '../components/DetailDrawer'
 import { getAlbum } from '../lib/api'
 import { exportBoard } from '../lib/exportImage'
 import { stopPreview } from '../lib/audioStore'
-import { loadBoard, resetBoard, saveBoard, type BoardState } from '../lib/tierStorage'
+import {
+  decodeBoard,
+  encodeBoard,
+  loadBoard,
+  resetBoard,
+  saveBoard,
+  type BoardState,
+} from '../lib/tierStorage'
 import type { AlbumDetail, Track } from '../lib/types'
 
 export default function AlbumPage() {
   const { albumId = '' } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [album, setAlbum] = useState<AlbumDetail | null>(null)
   const [error, setError] = useState<string>()
   const [board, setBoard] = useState<BoardState | null>(null)
@@ -18,7 +26,10 @@ export default function AlbumPage() {
   const [copied, setCopied] = useState(false)
   const [exporting, setExporting] = useState(false)
 
-  // load album + its saved (or fresh) board
+  // capture a shared (?s=) board once, before it is stripped from the url
+  const sharedCode = useRef(searchParams.get('s'))
+
+  // load album + its board: a shared ?s= ranking wins, else the saved/fresh one
   useEffect(() => {
     let alive = true
     setAlbum(null)
@@ -29,12 +40,24 @@ export default function AlbumPage() {
       .then((a) => {
         if (!alive) return
         setAlbum(a)
-        setBoard(loadBoard(a.id, a.tracks))
+        const shared = sharedCode.current
+          ? decodeBoard(sharedCode.current, a.tracks)
+          : null
+        if (shared) {
+          setBoard(shared)
+          saveBoard(a.id, shared)
+          // drop ?s= so refreshes and edits use the local copy
+          setSearchParams({}, { replace: true })
+          sharedCode.current = null
+        } else {
+          setBoard(loadBoard(a.id, a.tracks))
+        }
       })
       .catch((e) => alive && setError(String(e.message ?? e)))
     return () => {
       alive = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [albumId])
 
   // persist on every board change
@@ -49,8 +72,13 @@ export default function AlbumPage() {
   }, [album])
 
   function handleShare() {
+    if (!album || !board) return
+    // encode the current ranking into the link so others see this exact tier list
+    const url = new URL(window.location.href)
+    url.search = ''
+    url.searchParams.set('s', encodeBoard(board, album.tracks))
     navigator.clipboard
-      ?.writeText(window.location.href)
+      ?.writeText(url.toString())
       .then(() => {
         setCopied(true)
         setTimeout(() => setCopied(false), 1800)
