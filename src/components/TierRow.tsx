@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { FiDroplet, FiTrash2 } from 'react-icons/fi'
+import { FiTrash2 } from 'react-icons/fi'
 import { SortableSongCard } from './SortableSongCard'
-import { EXTRA_COLORS, type Tier } from '../lib/tierStorage'
+import type { Tier } from '../lib/tierStorage'
 import type { Track } from '../lib/types'
 
 interface Props {
@@ -28,38 +27,43 @@ export function TierRow({
   editable,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: tier.id })
-  const [palette, setPalette] = useState(false)
 
   return (
-    <div className="flex items-stretch overflow-hidden rounded-lg border border-white/10">
-      {/* label cell */}
+    <div className="flex items-start gap-2">
+      {/* square 1:1 header, matching the album cards */}
       <div
-        className="relative flex w-20 shrink-0 flex-col items-center justify-center gap-2 px-1 py-3"
+        className="relative flex aspect-square w-24 shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg"
         style={{ backgroundColor: tier.color }}
       >
         {editable ? (
           <input
             value={tier.label}
             onChange={(e) => onLabel(tier.id, e.target.value)}
-            className="w-full bg-transparent text-center text-2xl font-bold text-black/80 outline-none"
+            className="w-full bg-transparent text-center text-3xl font-bold text-black/80 outline-none"
             style={{ textTransform: 'none' }}
             aria-label="nombre del tier"
             maxLength={6}
           />
         ) : (
-          <span className="text-2xl font-bold text-black/80">{tier.label}</span>
+          <span className="text-3xl font-bold text-black/80">{tier.label}</span>
         )}
 
         {editable && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPalette((p) => !p)}
-              aria-label="cambiar color"
+          <div className="absolute bottom-1.5 flex items-center gap-2">
+            {/* native colour picker: reliable and never clipped */}
+            <label
+              className="h-4 w-4 cursor-pointer rounded-full ring-1 ring-black/30"
+              style={{ backgroundColor: tier.color }}
               title="cambiar color"
-              className="text-black/60 transition-colors hover:text-black"
             >
-              <FiDroplet size={14} />
-            </button>
+              <input
+                type="color"
+                value={tier.color}
+                onChange={(e) => onColor(tier.id, e.target.value)}
+                className="sr-only"
+                aria-label="cambiar color del tier"
+              />
+            </label>
             <button
               onClick={() => onRemove(tier.id)}
               aria-label="eliminar tier"
@@ -70,34 +74,17 @@ export function TierRow({
             </button>
           </div>
         )}
-
-        {palette && editable && (
-          <div className="absolute left-1/2 top-full z-20 mt-1 flex -translate-x-1/2 gap-1.5 rounded-lg border border-white/20 bg-bg p-2 shadow-xl">
-            {EXTRA_COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => {
-                  onColor(tier.id, c)
-                  setPalette(false)
-                }}
-                className="h-5 w-5 rounded-full ring-1 ring-white/20"
-                style={{ backgroundColor: c }}
-                aria-label={`usar color ${c}`}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       {/* drop area */}
       <div
         ref={setNodeRef}
-        className={`min-h-[6rem] flex-1 bg-white/[0.03] p-2 transition-colors ${
-          isOver ? 'bg-accent/15' : ''
+        className={`min-h-24 flex-1 rounded-lg border p-2 transition-colors ${
+          isOver ? 'border-accent/60 bg-accent/15' : 'border-white/10 bg-white/[0.03]'
         }`}
       >
         <SortableContext items={trackIds} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-2">
             {trackIds.map((id) =>
               trackMap[id] ? (
                 <SortableSongCard

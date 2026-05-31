@@ -37,9 +37,10 @@ export const SongCard = forwardRef<HTMLDivElement, Props>(function SongCard(
       )}
 
       {/* scrim for title legibility */}
-      <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black via-black/80 to-transparent" />
 
-      <span className="normal-case absolute inset-x-0 bottom-0 line-clamp-2 p-2 text-left text-[13px] font-semibold leading-tight text-white">
+      {/* full title, never truncated: wraps and grows upward over the scrim */}
+      <span className="normal-case absolute inset-x-0 bottom-0 max-h-full overflow-hidden p-1.5 text-left text-[11px] font-semibold leading-[1.15] text-white [overflow-wrap:anywhere]">
         {track.name}
       </span>
 

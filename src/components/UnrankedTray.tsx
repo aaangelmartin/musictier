@@ -23,7 +23,7 @@ export function UnrankedTray({ trackIds, trackMap, onInfo }: Props) {
         className={`min-h-[6rem] p-2 transition-colors ${isOver ? 'bg-accent/15' : ''}`}
       >
         <SortableContext items={trackIds} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-2">
             {trackIds.map((id) =>
               trackMap[id] ? (
                 <SortableSongCard
