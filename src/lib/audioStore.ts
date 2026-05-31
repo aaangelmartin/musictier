@@ -55,5 +55,9 @@ function subscribe(cb: () => void) {
 }
 
 export function usePlayingId(): string | null {
-  return useSyncExternalStore(subscribe, () => currentId, () => null)
+  return useSyncExternalStore(
+    subscribe,
+    () => currentId,
+    () => null,
+  )
 }

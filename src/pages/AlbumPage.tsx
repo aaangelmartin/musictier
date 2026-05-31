@@ -6,12 +6,7 @@ import { DetailDrawer } from '../components/DetailDrawer'
 import { getAlbum } from '../lib/api'
 import { exportBoard } from '../lib/exportImage'
 import { stopPreview } from '../lib/audioStore'
-import {
-  loadBoard,
-  resetBoard,
-  saveBoard,
-  type BoardState,
-} from '../lib/tierStorage'
+import { loadBoard, resetBoard, saveBoard, type BoardState } from '../lib/tierStorage'
 import type { AlbumDetail, Track } from '../lib/types'
 
 export default function AlbumPage() {
@@ -68,7 +63,10 @@ export default function AlbumPage() {
     if (!exportRef.current || !album) return
     setExporting(true)
     try {
-      const slug = album.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 40)
+      const slug = album.name
+        .replace(/[^a-z0-9]+/gi, '-')
+        .toLowerCase()
+        .slice(0, 40)
       await exportBoard(exportRef.current, `tierlist-${slug}.png`)
     } finally {
       setExporting(false)

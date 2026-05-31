@@ -65,7 +65,10 @@ export function loadBoard(albumId: string, tracks: Track[]): BoardState {
   // any new/unplaced tracks go to the unranked tray
   for (const t of tracks) if (!placed.has(t.id)) items[UNRANKED].push(t.id)
 
-  return { tiers: saved.tiers.length ? saved.tiers : DEFAULT_TIERS.map((t) => ({ ...t })), items }
+  return {
+    tiers: saved.tiers.length ? saved.tiers : DEFAULT_TIERS.map((t) => ({ ...t })),
+    items,
+  }
 }
 
 export function saveBoard(albumId: string, state: BoardState): void {

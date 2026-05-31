@@ -17,7 +17,9 @@ export function SearchResults({ albums, loading, error, query }: Props) {
     return <p className="py-10 text-center text-white/50">buscando...</p>
   }
   if (query && albums.length === 0) {
-    return <p className="py-10 text-center text-white/50">sin resultados para “{query}”.</p>
+    return (
+      <p className="py-10 text-center text-white/50">sin resultados para “{query}”.</p>
+    )
   }
   if (albums.length === 0) return null
 

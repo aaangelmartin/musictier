@@ -87,7 +87,11 @@ function normalizeItunesAlbum(results: ItunesEntity[]): AlbumDetail {
       artworkUrl: itunesArt(t.artworkUrl100) || albumArt,
       genre: t.primaryGenreName,
     }))
-    .sort((a, b) => (a.discNumber ?? 1) - (b.discNumber ?? 1) || (a.trackNumber ?? 0) - (b.trackNumber ?? 0))
+    .sort(
+      (a, b) =>
+        (a.discNumber ?? 1) - (b.discNumber ?? 1) ||
+        (a.trackNumber ?? 0) - (b.trackNumber ?? 0),
+    )
 
   return {
     id: `itunes:${collection?.collectionId}`,

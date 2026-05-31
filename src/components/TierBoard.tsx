@@ -68,7 +68,11 @@ export function TierBoard({
         items: {
           ...prev.items,
           [activeC]: activeItems.filter((id) => id !== activeId),
-          [overC]: [...overItems.slice(0, newIndex), activeId, ...overItems.slice(newIndex)],
+          [overC]: [
+            ...overItems.slice(0, newIndex),
+            activeId,
+            ...overItems.slice(newIndex),
+          ],
         },
       }
     })
@@ -97,10 +101,16 @@ export function TierBoard({
   // --- tier editing ---------------------------------------------------------
 
   function setLabel(id: string, label: string) {
-    setBoard((p) => ({ ...p, tiers: p.tiers.map((t) => (t.id === id ? { ...t, label } : t)) }))
+    setBoard((p) => ({
+      ...p,
+      tiers: p.tiers.map((t) => (t.id === id ? { ...t, label } : t)),
+    }))
   }
   function setColor(id: string, color: string) {
-    setBoard((p) => ({ ...p, tiers: p.tiers.map((t) => (t.id === id ? { ...t, color } : t)) }))
+    setBoard((p) => ({
+      ...p,
+      tiers: p.tiers.map((t) => (t.id === id ? { ...t, color } : t)),
+    }))
   }
   function removeTier(id: string) {
     setBoard((p) => {
