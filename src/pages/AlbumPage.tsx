@@ -12,6 +12,8 @@ import {
   loadBoard,
   resetBoard,
   saveBoard,
+  upsertSavedList,
+  UNRANKED,
   type BoardState,
 } from '../lib/tierStorage'
 import type { AlbumDetail, Track } from '../lib/types'
@@ -60,9 +62,23 @@ export default function AlbumPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [albumId])
 
-  // persist on every board change
+  // persist on every board change, and record it in "my tier lists" once ranked
   useEffect(() => {
-    if (album && board) saveBoard(album.id, board)
+    if (!album || !board) return
+    saveBoard(album.id, board)
+    const unranked = board.items[UNRANKED]?.length ?? 0
+    const ranked = album.tracks.length - unranked
+    if (ranked > 0) {
+      upsertSavedList({
+        id: album.id,
+        name: album.name,
+        artist: album.artistName,
+        art: album.artworkUrl,
+        updatedAt: Date.now(),
+        ranked,
+        total: album.tracks.length,
+      })
+    }
   }, [album, board])
 
   const trackMap = useMemo(() => {

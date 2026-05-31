@@ -85,6 +85,53 @@ export function resetBoard(albumId: string, tracks: Track[]): BoardState {
   return board
 }
 
+// --- "my tier lists" index -------------------------------------------------
+// A small index of the albums the visitor has ranked, for the home gallery.
+
+export interface SavedListMeta {
+  id: string
+  name: string
+  artist: string
+  art: string
+  updatedAt: number
+  ranked: number
+  total: number
+}
+
+const LISTS_KEY = 'musictier:lists'
+
+export function getSavedLists(): SavedListMeta[] {
+  try {
+    const raw = localStorage.getItem(LISTS_KEY)
+    const list = raw ? (JSON.parse(raw) as SavedListMeta[]) : []
+    return list.sort((a, b) => b.updatedAt - a.updatedAt)
+  } catch {
+    return []
+  }
+}
+
+export function upsertSavedList(meta: SavedListMeta): void {
+  try {
+    const list = getSavedLists().filter((l) => l.id !== meta.id)
+    list.unshift(meta)
+    localStorage.setItem(LISTS_KEY, JSON.stringify(list))
+  } catch {
+    /* ignore */
+  }
+}
+
+export function removeSavedList(id: string): void {
+  try {
+    localStorage.setItem(
+      LISTS_KEY,
+      JSON.stringify(getSavedLists().filter((l) => l.id !== id)),
+    )
+    localStorage.removeItem(KEY(id))
+  } catch {
+    /* ignore */
+  }
+}
+
 // --- shareable encoding ----------------------------------------------------
 // Encode the whole tier list into a compact, URL-safe string so a link can
 // carry someone's exact ranking. Tracks are referenced by their index in the
