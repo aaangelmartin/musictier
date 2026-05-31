@@ -75,7 +75,7 @@ export function saveBoard(albumId: string, state: BoardState): void {
   try {
     localStorage.setItem(KEY(albumId), JSON.stringify(state))
   } catch {
-    /* storage full or unavailable — ignore */
+    /* storage full or unavailable, ignore */
   }
 }
 

@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* aaa. brand — dark adaptation.
+/* aaa. brand, dark adaptation.
    In the public brand cyan #00b5e2 is the canvas. Here the canvas is #0a0a0a
    and cyan becomes the single accent. Text is white at opacity steps. */
 @theme {

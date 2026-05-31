@@ -48,7 +48,7 @@ export function SearchResults({ albums, loading, error, query }: Props) {
             </p>
             <p className="normal-case truncate text-xs text-white/50">
               {album.artistName}
-              {album.year ? ` · ${album.year}` : ''}
+              {album.year ? ` - ${album.year}` : ''}
             </p>
           </Link>
         </motion.li>

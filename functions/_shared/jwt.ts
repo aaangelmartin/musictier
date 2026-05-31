@@ -1,9 +1,9 @@
 // Mints an Apple Music developer token (ES256 JWT) using Web Crypto, which is
 // available both in Cloudflare Workers and modern Node. The signed token never
-// leaves the server in v1 — handlers use it to call api.music.apple.com.
+// leaves the server in v1, handlers use it to call api.music.apple.com.
 //
 // CRITICAL: SubtleCrypto's ECDSA/P-256/SHA-256 signature is already in JOSE
-// r||s (IEEE P1363) form — exactly what JWT expects. Do NOT DER-encode it.
+// r||s (IEEE P1363) form, exactly what JWT expects. Do NOT DER-encode it.
 
 export interface AppleEnv {
   APPLE_TEAM_ID?: string
@@ -50,7 +50,7 @@ export async function getDeveloperToken(env: AppleEnv, now: number): Promise<str
   const pem = env.MUSICKIT_PRIVATE_KEY!.replace(/\\n/g, '\n')
 
   const iat = now
-  const exp = now + 60 * 60 * 12 // 12h — well under Apple's 6-month max
+  const exp = now + 60 * 60 * 12 // 12h, well under Apple's 6-month max
   const header = { alg: 'ES256', kid: keyId }
   const payload = { iss: teamId, iat, exp }
   const signingInput = `${base64url(JSON.stringify(header))}.${base64url(

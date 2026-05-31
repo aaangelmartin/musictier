@@ -1,4 +1,4 @@
-# tier maker — aaa.
+# tier maker - aaa.
 
 busca un álbum, ordena sus canciones por tiers, descífralo y comparte el link para que
 otros hagan el suyo. estética de marca `aaa.` en modo oscuro (`#0a0a0a`, acento cian).
@@ -15,8 +15,8 @@ otros hagan el suyo. estética de marca `aaa.` en modo oscuro (`#0a0a0a`, acento
 
 ## stack
 
-react 19 · typescript · vite 7 · tailwind v4 · react router v7 · framer motion · gsap ·
-@dnd-kit · html-to-image · react-icons. backend: una cloudflare pages function que hace de
+react 19, typescript, vite 7, tailwind v4, react router v7, framer motion, gsap,
+@dnd-kit, html-to-image, react-icons. backend: una cloudflare pages function que hace de
 proxy.
 
 ## desarrollo

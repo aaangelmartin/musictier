@@ -4,7 +4,7 @@
 export type Source = 'apple' | 'itunes'
 
 export interface AlbumSummary {
-  /** source-tagged id, e.g. "itunes:1440913508" — used in /a/:id share links */
+  /** source-tagged id, e.g. "itunes:1440913508", used in /a/:id share links */
   id: string
   source: Source
   name: string
