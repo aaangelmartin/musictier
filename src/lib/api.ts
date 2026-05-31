@@ -173,15 +173,29 @@ function normalizeAppleAlbum(r: AppleResource): AlbumDetail {
 
 // --- public API -------------------------------------------------------------
 
+// keep albums and EPs, drop singles. Apple/iTunes both suffix single releases
+// with "- Single"; a 1-track release is also a single.
+function isAlbumOrEp(name: string, trackCount?: number): boolean {
+  if (/-\s*single\s*$/i.test(name)) return false
+  if (trackCount !== undefined && trackCount <= 1) return false
+  return true
+}
+
 export async function searchAlbums(term: string): Promise<AlbumSummary[]> {
   if (!term.trim()) return []
   const { source, data } = await getCatalog({ op: 'search', term })
   if (source === 'itunes') {
     const r = (data as { results?: ItunesEntity[] }).results ?? []
-    return r.filter((e) => e.collectionId).map(normalizeItunesSummary)
+    return r
+      .filter((e) => e.collectionId && isAlbumOrEp(e.collectionName ?? '', e.trackCount))
+      .map(normalizeItunesSummary)
   }
   const r = (data as { results?: { albums?: { data?: AppleResource[] } } }).results
-  return (r?.albums?.data ?? []).map(normalizeAppleSummary)
+  return (r?.albums?.data ?? [])
+    .filter((a) =>
+      isAlbumOrEp(attr<string>(a, 'name') ?? '', attr<number>(a, 'trackCount')),
+    )
+    .map(normalizeAppleSummary)
 }
 
 export async function getAlbum(id: string): Promise<AlbumDetail> {
