@@ -79,7 +79,7 @@ export default function AlbumPage() {
 
   if (error) {
     return (
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-32 text-center md:px-6">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-16 text-center md:px-6">
         <p className="text-white/60">no se pudo cargar el álbum: {error}</p>
         <Link to="/" className="mt-4 inline-block text-accent hover:underline">
           volver a buscar
@@ -90,8 +90,8 @@ export default function AlbumPage() {
 
   if (!album || !board) {
     return (
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-32 text-center md:px-6">
-        <p className="text-white/50">cargando álbum...</p>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-16 text-center md:px-6">
+        <p className="text-accent">cargando álbum...</p>
       </main>
     )
   }
@@ -99,7 +99,7 @@ export default function AlbumPage() {
   const detailTrack = detail === 'album' ? null : detail
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-28 md:px-6">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-8 md:px-6">
       <AlbumHeader
         album={album}
         copied={copied}

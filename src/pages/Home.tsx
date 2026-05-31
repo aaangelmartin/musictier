@@ -47,10 +47,10 @@ export default function Home() {
   }, [debounced])
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-12 pt-28 md:px-6">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-12 pt-10 md:px-6">
       <section className="py-10 text-center">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          tier list de cualquier álbum
+          <span className="text-accent">tier list</span> de cualquier álbum
         </h1>
         <p className="normal-case mx-auto mt-4 max-w-xl text-white/80">
           busca un disco, ordena sus canciones por tiers, descífralo y comparte el link

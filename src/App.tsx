@@ -1,8 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Navbar } from './components/Navbar'
-import { Footer } from './components/Footer'
+import { TopBar } from './components/TopBar'
 
 const Home = lazy(() => import('./pages/Home'))
 const AlbumPage = lazy(() => import('./pages/AlbumPage'))
@@ -25,7 +24,7 @@ export default function App() {
   const location = useLocation()
   return (
     <>
-      <Navbar />
+      <TopBar />
       <Suspense fallback={<div className="min-h-[100dvh]" />}>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
@@ -34,7 +33,6 @@ export default function App() {
               element={
                 <Fade>
                   <Home />
-                  <Footer />
                 </Fade>
               }
             />
@@ -43,7 +41,6 @@ export default function App() {
               element={
                 <Fade>
                   <AlbumPage />
-                  <Footer />
                 </Fade>
               }
             />
@@ -52,7 +49,6 @@ export default function App() {
               element={
                 <Fade>
                   <Home />
-                  <Footer />
                 </Fade>
               }
             />
