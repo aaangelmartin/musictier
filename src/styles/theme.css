@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+/* aaa. brand — dark adaptation.
+   In the public brand cyan #00b5e2 is the canvas. Here the canvas is #0a0a0a
+   and cyan becomes the single accent. Text is white at opacity steps. */
+@theme {
+  --color-bg: #0a0a0a;
+  --color-accent: #00b5e2;
+
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+
+  --tracking-tight: -0.03em;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-bg);
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--color-bg);
+    color: #fff;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    /* all interface text is lowercase. always. */
+    text-transform: lowercase;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: #0a0a0a;
+  }
+
+  /* keep proper nouns (album/track/artist names) in their original casing */
+  .normal-case {
+    text-transform: none;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: var(--tracking-tight);
+    font-weight: 700;
+  }
+}
+
+/* thin dark scrollbars */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+}

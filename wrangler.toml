@@ -1,0 +1,9 @@
+name = "music-tier-maker"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-01-01"
+
+# Apple Music credentials are NOT stored here. Set them as encrypted secrets:
+#   wrangler pages secret put APPLE_TEAM_ID
+#   wrangler pages secret put MUSICKIT_KEY_ID
+#   wrangler pages secret put MUSICKIT_PRIVATE_KEY
+# Without them, /api/catalog falls back to the iTunes Search API automatically.
