@@ -2,20 +2,38 @@
 // payloads (Apple Music or iTunes) into the unified types in ./types.
 
 import type { AlbumDetail, AlbumSummary, Source, Track } from './types'
+import { clientAlbum, clientSearch } from './itunesClient'
 
 interface CatalogResponse {
   source: Source
   data: unknown
 }
 
+// On Cloudflare the /api proxy runs (and can use Apple Music). On static hosting
+// (GitHub Pages) it does not, so we fall back to talking to iTunes directly via
+// JSONP. The decision is cached after the first probe.
+let noBackend = false
+
 async function getCatalog(params: Record<string, string>): Promise<CatalogResponse> {
-  const qs = new URLSearchParams(params).toString()
-  const res = await fetch(`/api/catalog?${qs}`)
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string }
-    throw new Error(body.error || `request failed (${res.status})`)
+  if (!noBackend) {
+    try {
+      const qs = new URLSearchParams(params).toString()
+      const res = await fetch(`/api/catalog?${qs}`)
+      const ct = res.headers.get('content-type') ?? ''
+      if (res.ok && ct.includes('application/json')) {
+        return (await res.json()) as CatalogResponse
+      }
+      noBackend = true
+    } catch {
+      noBackend = true
+    }
   }
-  return (await res.json()) as CatalogResponse
+
+  // backend-free path (iTunes only)
+  if (params.op === 'search') {
+    return { source: 'itunes', data: await clientSearch(params.term) }
+  }
+  return { source: 'itunes', data: await clientAlbum(params.id) }
 }
 
 // --- artwork helpers --------------------------------------------------------
@@ -214,10 +232,14 @@ export async function getAlbum(id: string): Promise<AlbumDetail> {
   return normalizeAppleAlbum(resource)
 }
 
-/** Route artwork through our proxy so html-to-image export does not taint the canvas. */
+/**
+ * CORS-enabled artwork url for PNG export (mzstatic sends no CORS headers and
+ * would taint the canvas). Uses images.weserv.nl, which works on any host
+ * including static GitHub Pages, so no backend is required for export.
+ */
 export function proxiedArtwork(url: string): string {
   if (!url) return ''
-  return `/api/artwork?url=${encodeURIComponent(url)}`
+  return `https://images.weserv.nl/?url=ssl:${url.replace(/^https?:\/\//, '')}`
 }
 
 export function formatDuration(ms?: number): string {
