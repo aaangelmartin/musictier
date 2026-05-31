@@ -1,30 +1,8 @@
 // Backend-free iTunes access for static hosting (e.g. GitHub Pages), where our
-// /api proxy does not run. The iTunes Search API has no CORS but supports JSONP,
-// so we load it via <script>. Mirrors the artist-discography logic in
-// functions/_shared/handlers.ts so results match the server path.
-
-let counter = 0
-
-function jsonp<T = unknown>(url: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const cb = `__itunes_cb_${++counter}`
-    const script = document.createElement('script')
-    const cleanup = () => {
-      delete (window as unknown as Record<string, unknown>)[cb]
-      script.remove()
-    }
-    ;(window as unknown as Record<string, unknown>)[cb] = (data: T) => {
-      cleanup()
-      resolve(data)
-    }
-    script.onerror = () => {
-      cleanup()
-      reject(new Error('jsonp failed'))
-    }
-    script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${cb}`
-    document.body.appendChild(script)
-  })
-}
+// /api proxy does not run. The iTunes Search API supports CORS (it reflects the
+// request Origin), so a plain fetch works from the browser, including mobile
+// Safari (JSONP failed there because of strict script MIME checking). Mirrors the
+// artist-discography logic in functions/_shared/handlers.ts so results match.
 
 interface ItunesRow {
   wrapperType?: string
@@ -34,7 +12,9 @@ interface ItunesRow {
 }
 
 async function get(path: string): Promise<ItunesRow[]> {
-  const data = await jsonp<{ results?: ItunesRow[] }>(`https://itunes.apple.com/${path}`)
+  const res = await fetch(`https://itunes.apple.com/${path}`)
+  if (!res.ok) throw new Error(`itunes ${res.status}`)
+  const data = (await res.json()) as { results?: ItunesRow[] }
   return data.results ?? []
 }
 
@@ -68,9 +48,11 @@ export async function clientSearch(term: string, country = 'es') {
 
 export async function clientAlbum(taggedId: string, country = 'es') {
   const raw = taggedId.includes(':') ? taggedId.split(/:(.+)/)[1] : taggedId
-  return jsonp(
+  const res = await fetch(
     `https://itunes.apple.com/lookup?id=${encodeURIComponent(
       raw,
     )}&entity=song&limit=200&country=${country}`,
   )
+  if (!res.ok) throw new Error(`itunes ${res.status}`)
+  return res.json()
 }
