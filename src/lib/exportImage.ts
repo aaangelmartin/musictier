@@ -21,6 +21,11 @@ export async function exportBoard(node: HTMLElement, filename: string): Promise<
   const imgs = Array.from(node.querySelectorAll('img'))
   const originals = imgs.map((img) => img.getAttribute('src') ?? '')
 
+  // hide controls (play/info/indicators) so only artwork + title are captured
+  const hidden = Array.from(node.querySelectorAll<HTMLElement>('[data-export-hide]'))
+  const prevDisplay = hidden.map((el) => el.style.display)
+  hidden.forEach((el) => (el.style.display = 'none'))
+
   await Promise.all(
     imgs.map((img, i) => {
       const src = originals[i]
@@ -40,6 +45,7 @@ export async function exportBoard(node: HTMLElement, filename: string): Promise<
     link.href = dataUrl
     link.click()
   } finally {
+    hidden.forEach((el, i) => (el.style.display = prevDisplay[i]))
     // restore original srcs so the live board keeps using direct (cacheable) urls
     await Promise.all(imgs.map((img, i) => load(img, originals[i])))
   }
