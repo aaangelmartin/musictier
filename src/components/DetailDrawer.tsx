@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FiPause, FiPlay, FiX } from 'react-icons/fi'
 import { formatDuration } from '../lib/api'
+import { getLyrics } from '../lib/lyrics'
 import { togglePreview, usePlayingId } from '../lib/audioStore'
 import type { AlbumDetail, Track } from '../lib/types'
 
@@ -25,6 +27,22 @@ function Row({ label, value }: { label: string; value?: string | number }) {
 // album itself when no track is selected.
 export function DetailDrawer({ album, track, open, onClose }: Props) {
   const playingId = usePlayingId()
+  const [lyrics, setLyrics] = useState<string | null>(null)
+  const [lyricsState, setLyricsState] = useState<'idle' | 'loading' | 'done'>('idle')
+
+  // fetch lyrics for the selected track (LRCLIB)
+  useEffect(() => {
+    if (!track) return
+    let alive = true
+    setLyrics(null)
+    setLyricsState('loading')
+    getLyrics(album.artistName, track.name, album.name, track.durationMs)
+      .then((l) => alive && setLyrics(l))
+      .finally(() => alive && setLyricsState('done'))
+    return () => {
+      alive = false
+    }
+  }, [track, album.artistName, album.name])
 
   return (
     <AnimatePresence>
@@ -86,6 +104,25 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
                 </>
               ) : null}
             </div>
+
+            {track && (
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-semibold tracking-widest text-white/40">
+                  letra
+                </p>
+                {lyricsState === 'loading' && (
+                  <p className="text-sm text-white/40">buscando letra...</p>
+                )}
+                {lyricsState === 'done' && lyrics && (
+                  <p className="normal-case whitespace-pre-wrap text-sm leading-relaxed text-white/80">
+                    {lyrics}
+                  </p>
+                )}
+                {lyricsState === 'done' && !lyrics && (
+                  <p className="text-sm text-white/40">letra no disponible.</p>
+                )}
+              </div>
+            )}
 
             <p className="mt-5 mb-2 text-xs font-semibold tracking-widest text-white/40">
               álbum
