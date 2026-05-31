@@ -8,13 +8,6 @@ import { searchAlbums } from '../lib/api'
 import { getSavedLists, removeSavedList, type SavedListMeta } from '../lib/tierStorage'
 import type { AlbumSummary } from '../lib/types'
 
-const SUGGESTIONS = [
-  'currents',
-  'blonde',
-  'el odio siempre gana',
-  'random access memories',
-]
-
 export default function Home() {
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') ?? '')
@@ -66,33 +59,18 @@ export default function Home() {
   const searching = debounced.trim().length > 0
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-12 pt-10 md:px-6">
-      <section className="py-10 text-center">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          <span className="text-accent">tier list</span> de cualquier álbum
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-12 pt-12 md:px-6 md:pt-20">
+      <section className="pb-8">
+        <h1 className="text-5xl font-bold leading-[0.95] tracking-tight sm:text-6xl">
+          rankea las canciones de <span className="text-accent">cualquier álbum</span>.
         </h1>
-        <p className="normal-case mx-auto mt-4 max-w-xl text-white/80">
-          busca un disco, ordena sus canciones por tiers, lee sus letras y comparte tu
-          ranking. sin cuentas, sin login.
+        <p className="normal-case mt-5 max-w-lg text-base text-white/70">
+          busca un disco, arrástralo a tiers, lee las letras y comparte tu ranking. sin
+          cuentas, sin login.
         </p>
       </section>
 
-      <div className="mx-auto max-w-xl">
-        <SearchBar value={query} onChange={setQuery} autoFocus />
-        {!searching && (
-          <div className="mt-3 flex flex-wrap justify-center gap-2">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => setQuery(s)}
-                className="normal-case rounded-full border border-white/20 px-3 py-1 text-xs text-white/60 transition-colors hover:border-accent hover:text-white"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <SearchBar value={query} onChange={setQuery} autoFocus />
 
       {searching ? (
         <SearchResults
