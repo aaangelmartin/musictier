@@ -99,13 +99,17 @@ export async function exportBoard({
 }: ExportInput): Promise<void> {
   const W = 1080
   const PAD = 28
-  const LABEL = 116
-  const CARD = 96
-  const GAP = 8
-  const HEADER_H = 108
+  const CARD = 104
+  const LABEL = CARD // tier label is the same square size as the song cards
+  const COVER = CARD // album cover in the header matches too
+  const GAP = 10
+  const HEADER_H = PAD + COVER + 24
   const ROW_GAP = 10
 
-  const contentX = PAD + LABEL + 12
+  // make sure Outfit is available so canvas text matches the app
+  if (document.fonts?.ready) await document.fonts.ready
+
+  const contentX = PAD + LABEL + GAP
   const contentW = W - contentX - PAD
   const cols = Math.max(1, Math.floor((contentW + GAP) / (CARD + GAP)))
 
@@ -146,34 +150,38 @@ export async function exportBoard({
   ctx.fillStyle = '#0a0a0a'
   ctx.fillRect(0, 0, W, H)
 
-  // header, top-left: album cover + name + artist
-  const COVER = 72
+  // header, top-left: album cover (card-sized) + name + artist, text centred
   if (albumImg) {
     ctx.save()
     rr(ctx, PAD, PAD, COVER, COVER, 12)
     ctx.clip()
     ctx.drawImage(albumImg, PAD, PAD, COVER, COVER)
     ctx.restore()
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    rr(ctx, PAD, PAD, COVER, COVER, 12)
+    ctx.fill()
   }
-  const tx = PAD + COVER + 16
+  const tx = PAD + COVER + 18
+  const midY = PAD + COVER / 2
   ctx.textAlign = 'left'
   ctx.fillStyle = '#ffffff'
-  ctx.font = '700 26px Outfit, sans-serif'
-  ctx.fillText(albumName, tx, PAD + 28, W - tx - 180)
+  ctx.font = '700 28px Outfit, sans-serif'
+  ctx.fillText(albumName, tx, midY - 2, W - tx - 180)
   if (artistName) {
     ctx.fillStyle = 'rgba(255,255,255,0.6)'
-    ctx.font = '500 16px Outfit, sans-serif'
-    ctx.fillText(artistName, tx, PAD + 54, W - tx - 180)
+    ctx.font = '500 17px Outfit, sans-serif'
+    ctx.fillText(artistName, tx, midY + 24, W - tx - 180)
   }
 
   // header, top-right: branding
   ctx.textAlign = 'right'
   ctx.fillStyle = '#00b5e2'
   ctx.font = '700 22px Outfit, sans-serif'
-  ctx.fillText('tier maker.', W - PAD, PAD + 24)
+  ctx.fillText('tier maker.', W - PAD, midY - 4)
   ctx.fillStyle = 'rgba(255,255,255,0.4)'
   ctx.font = '500 13px Outfit, sans-serif'
-  ctx.fillText('aaangelmartin.com', W - PAD, PAD + 46)
+  ctx.fillText('aaangelmartin.com', W - PAD, midY + 18)
   ctx.textAlign = 'left'
 
   let y = HEADER_H
