@@ -12,8 +12,8 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   style?: CSSProperties
 }
 
-// Presentational song card. Drag wiring (useSortable) lives in the sortable
-// wrapper; this component just renders and forwards a ref + drag listeners.
+// Square album-art card with the title overlaid. The play/info controls are
+// marked data-export-hide so they are removed from the exported PNG.
 export const SongCard = forwardRef<HTMLDivElement, Props>(function SongCard(
   { track, isPlaying, onPlay, onInfo, dragging, style, ...rest },
   ref,
@@ -21,42 +21,57 @@ export const SongCard = forwardRef<HTMLDivElement, Props>(function SongCard(
   return (
     <div
       ref={ref}
-      style={style}
-      className={`group flex select-none items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-1.5 pr-2 backdrop-blur-sm transition-colors hover:border-white/30 ${
+      style={{ touchAction: 'none', ...style }}
+      className={`group relative aspect-square w-full cursor-grab select-none overflow-hidden rounded-lg border border-white/10 bg-white/5 active:cursor-grabbing ${
         dragging ? 'opacity-40' : ''
       }`}
       {...rest}
     >
-      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded">
-        {track.artworkUrl && (
-          <img
-            src={track.artworkUrl}
-            alt=""
-            draggable={false}
-            className="h-full w-full object-cover"
-          />
-        )}
-      </div>
-      <span className="normal-case min-w-0 flex-1 truncate text-xs font-medium text-white">
+      {track.artworkUrl && (
+        <img
+          src={track.artworkUrl}
+          alt=""
+          draggable={false}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      )}
+
+      {/* scrim for title legibility */}
+      <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+      <span className="normal-case absolute inset-x-0 bottom-0 line-clamp-2 p-2 text-left text-[13px] font-semibold leading-tight text-white">
         {track.name}
       </span>
-      <button
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={onPlay}
-        aria-label={isPlaying ? 'pausar' : 'reproducir'}
-        disabled={!track.previewUrl}
-        className="shrink-0 text-white/60 transition-opacity hover:text-white disabled:opacity-20"
+
+      <div
+        data-export-hide
+        className="absolute right-1.5 top-1.5 flex gap-1 opacity-80 transition-opacity group-hover:opacity-100"
       >
-        {isPlaying ? <FiPause size={15} /> : <FiPlay size={15} />}
-      </button>
-      <button
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={onInfo}
-        aria-label="info"
-        className="shrink-0 text-white/40 transition-opacity hover:text-white"
-      >
-        <FiInfo size={15} />
-      </button>
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={onPlay}
+          aria-label={isPlaying ? 'pausar' : 'reproducir'}
+          disabled={!track.previewUrl}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-accent hover:text-bg disabled:opacity-30"
+        >
+          {isPlaying ? <FiPause size={14} /> : <FiPlay size={14} />}
+        </button>
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={onInfo}
+          aria-label="info"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-bg"
+        >
+          <FiInfo size={14} />
+        </button>
+      </div>
+
+      {isPlaying && (
+        <span
+          data-export-hide
+          className="absolute left-1.5 top-1.5 h-2 w-2 rounded-full bg-accent"
+        />
+      )}
     </div>
   )
 })

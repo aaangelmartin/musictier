@@ -15,15 +15,15 @@ export function UnrankedTray({ trackIds, trackMap, onInfo }: Props) {
 
   return (
     <div className="rounded-lg border border-white/10">
-      <p className="border-b border-white/10 px-3 py-2 text-xs font-semibold tracking-widest text-white/50">
-        sin clasificar · {trackIds.length}
+      <p className="border-b border-white/10 px-3 py-2 text-xs font-semibold tracking-widest text-accent">
+        sin clasificar - {trackIds.length}
       </p>
       <div
         ref={setNodeRef}
-        className={`min-h-[4.5rem] p-2 transition-colors ${isOver ? 'bg-white/10' : ''}`}
+        className={`min-h-[6rem] p-2 transition-colors ${isOver ? 'bg-accent/15' : ''}`}
       >
         <SortableContext items={trackIds} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
             {trackIds.map((id) =>
               trackMap[id] ? (
                 <SortableSongCard

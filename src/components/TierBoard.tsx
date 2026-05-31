@@ -3,7 +3,9 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
+  MeasuringStrategy,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useSensor,
   useSensors,
@@ -42,8 +44,14 @@ export function TierBoard({
   exportRef,
 }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null)
+  // Mouse: small drag threshold so taps still click buttons. Touch: press-and-
+  // hold so a finger drag does not fight page scroll (cards also set
+  // touch-action: none). Keyboard for accessibility.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 180, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -138,6 +146,9 @@ export function TierBoard({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
+      // re-measure droppable rects continuously: tiers resize as cards move
+      // between them, otherwise only the row whose rect stayed put accepts drops
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
@@ -177,12 +188,14 @@ export function TierBoard({
 
       <DragOverlay>
         {activeTrack ? (
-          <SongCard
-            track={activeTrack}
-            isPlaying={false}
-            onPlay={() => {}}
-            onInfo={() => {}}
-          />
+          <div className="w-[96px] rotate-3 opacity-90">
+            <SongCard
+              track={activeTrack}
+              isPlaying={false}
+              onPlay={() => {}}
+              onInfo={() => {}}
+            />
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>
