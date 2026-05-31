@@ -39,13 +39,15 @@ export function TierRow({
           <input
             value={tier.label}
             onChange={(e) => onLabel(tier.id, e.target.value)}
-            className="w-full bg-transparent text-center text-3xl font-bold text-black/80 outline-none"
+            className="w-full bg-transparent text-center text-[40px] font-bold leading-none text-black/80 outline-none"
             style={{ textTransform: 'none' }}
             aria-label="nombre del tier"
             maxLength={6}
           />
         ) : (
-          <span className="text-3xl font-bold text-black/80">{tier.label}</span>
+          <span className="text-[40px] font-bold leading-none text-black/80">
+            {tier.label}
+          </span>
         )}
 
         {editable && (

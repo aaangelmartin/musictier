@@ -187,14 +187,19 @@ export async function exportBoard({
   let y = HEADER_H
 
   for (const row of rows) {
+    // lane background behind the cards (visible even when the tier is empty)
+    ctx.fillStyle = 'rgba(255,255,255,0.04)'
+    rr(ctx, contentX, y, contentW, row.height, 12)
+    ctx.fill()
+
     // label
     ctx.fillStyle = row.tier.color
     rr(ctx, PAD, y, LABEL, LABEL, 14)
     ctx.fill()
     ctx.fillStyle = 'rgba(0,0,0,0.8)'
-    ctx.font = '700 44px Outfit, sans-serif'
+    ctx.font = '700 40px Outfit, sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText(row.tier.label, PAD + LABEL / 2, y + LABEL / 2 + 16)
+    ctx.fillText(row.tier.label, PAD + LABEL / 2, y + LABEL / 2 + 14)
     ctx.textAlign = 'left'
 
     // cards
