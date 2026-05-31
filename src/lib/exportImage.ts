@@ -89,14 +89,13 @@ function wrapLines(
   return lines
 }
 
-export async function exportBoard({
+async function renderBlob({
   board,
   trackMap,
   albumName,
   artistName,
   albumArtUrl,
-  filename,
-}: ExportInput): Promise<void> {
+}: ExportInput): Promise<Blob | null> {
   const W = 1080
   const PAD = 28
   const CARD = 104
@@ -239,11 +238,44 @@ export async function exportBoard({
     y += row.height + ROW_GAP
   }
 
-  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'))
+  return new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'))
+}
+
+// Download the tier list as a PNG.
+export async function exportBoard(input: ExportInput): Promise<void> {
+  const blob = await renderBlob(input)
   if (!blob) return
   const link = document.createElement('a')
-  link.download = filename
+  link.download = input.filename
   link.href = URL.createObjectURL(blob)
   link.click()
   URL.revokeObjectURL(link.href)
+}
+
+// True when the browser can share image files (mostly mobile).
+export function canShareImage(): boolean {
+  try {
+    return (
+      typeof navigator !== 'undefined' &&
+      !!navigator.canShare &&
+      navigator.canShare({ files: [new File([], 'x.png', { type: 'image/png' })] })
+    )
+  } catch {
+    return false
+  }
+}
+
+// Share the tier list PNG via the native share sheet. Returns false if it could
+// not share (so the caller can fall back to download).
+export async function shareImage(input: ExportInput): Promise<boolean> {
+  const blob = await renderBlob(input)
+  if (!blob) return false
+  const file = new File([blob], input.filename, { type: 'image/png' })
+  if (!canShareImage()) return false
+  try {
+    await navigator.share({ files: [file], title: input.albumName })
+    return true
+  } catch {
+    return false
+  }
 }

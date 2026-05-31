@@ -4,7 +4,7 @@ import { AlbumHeader } from '../components/AlbumHeader'
 import { TierBoard } from '../components/TierBoard'
 import { DetailDrawer } from '../components/DetailDrawer'
 import { getAlbum } from '../lib/api'
-import { exportBoard } from '../lib/exportImage'
+import { canShareImage, exportBoard, shareImage } from '../lib/exportImage'
 import { stopPreview } from '../lib/audioStore'
 import {
   decodeBoard,
@@ -113,22 +113,41 @@ export default function AlbumPage() {
     copyLink(url.toString())
   }
 
+  function exportInput() {
+    if (!album || !board) return null
+    const slug = album.name
+      .replace(/[^a-z0-9]+/gi, '-')
+      .toLowerCase()
+      .slice(0, 40)
+    return {
+      board,
+      trackMap,
+      albumName: album.name,
+      artistName: album.artistName,
+      albumArtUrl: album.artworkUrl,
+      filename: `tierlist-${slug}.png`,
+    }
+  }
+
   async function handleExport() {
-    if (!album || !board) return
+    const input = exportInput()
+    if (!input) return
     setExporting(true)
     try {
-      const slug = album.name
-        .replace(/[^a-z0-9]+/gi, '-')
-        .toLowerCase()
-        .slice(0, 40)
-      await exportBoard({
-        board,
-        trackMap,
-        albumName: album.name,
-        artistName: album.artistName,
-        albumArtUrl: album.artworkUrl,
-        filename: `tierlist-${slug}.png`,
-      })
+      await exportBoard(input)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // share the PNG via the native share sheet, fall back to download
+  async function handleShareImage() {
+    const input = exportInput()
+    if (!input) return
+    setExporting(true)
+    try {
+      const shared = await shareImage(input)
+      if (!shared) await exportBoard(input)
     } finally {
       setExporting(false)
     }
@@ -165,8 +184,10 @@ export default function AlbumPage() {
         album={album}
         copied={copied}
         exporting={exporting}
+        canShareImage={canShareImage()}
         onShareRanking={handleShareRanking}
         onShareAlbum={handleShareAlbum}
+        onShareImage={handleShareImage}
         onExport={handleExport}
         onReset={handleReset}
         onInfo={() => setDetail('album')}

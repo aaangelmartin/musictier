@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0a0a0a" />
+  <text x="80" y="300" font-family="Outfit, system-ui, sans-serif" font-size="92"
+        font-weight="700" letter-spacing="-3" fill="#ffffff">rankea las canciones</text>
+  <text x="80" y="400" font-family="Outfit, system-ui, sans-serif" font-size="92"
+        font-weight="700" letter-spacing="-3" fill="#ffffff">de <tspan fill="#00b5e2">cualquier álbum</tspan>.</text>
+  <text x="80" y="540" font-family="Outfit, system-ui, sans-serif" font-size="34"
+        font-weight="600" letter-spacing="-1" fill="#00b5e2">musictier.</text>
+</svg>

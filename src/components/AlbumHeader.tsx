@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   FiCheck,
   FiDownload,
+  FiImage,
   FiInfo,
   FiList,
   FiRotateCcw,
@@ -14,8 +15,10 @@ interface Props {
   album: AlbumDetail
   copied: boolean
   exporting: boolean
+  canShareImage: boolean
   onShareRanking: () => void
   onShareAlbum: () => void
+  onShareImage: () => void
   onExport: () => void
   onReset: () => void
   onInfo: () => void
@@ -25,8 +28,10 @@ export function AlbumHeader({
   album,
   copied,
   exporting,
+  canShareImage,
   onShareRanking,
   onShareAlbum,
+  onShareImage,
   onExport,
   onReset,
   onInfo,
@@ -100,6 +105,28 @@ export function AlbumHeader({
                       </span>
                     </span>
                   </button>
+                  {canShareImage && (
+                    <>
+                      <div className="h-px bg-white/10" />
+                      <button
+                        onClick={() => {
+                          onShareImage()
+                          setShareOpen(false)
+                        }}
+                        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5"
+                      >
+                        <FiImage className="mt-0.5 shrink-0 text-accent" />
+                        <span>
+                          <span className="block text-sm font-semibold text-white">
+                            como imagen
+                          </span>
+                          <span className="block text-xs text-white/50">
+                            comparte el png de tu tier list
+                          </span>
+                        </span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </>
             )}
