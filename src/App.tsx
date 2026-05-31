@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TopBar } from './components/TopBar'
+import { Footer } from './components/Footer'
 
 const Home = lazy(() => import('./pages/Home'))
 const AlbumPage = lazy(() => import('./pages/AlbumPage'))
@@ -33,6 +34,7 @@ export default function App() {
               element={
                 <Fade>
                   <Home />
+                  <Footer />
                 </Fade>
               }
             />
@@ -41,6 +43,7 @@ export default function App() {
               element={
                 <Fade>
                   <AlbumPage />
+                  <Footer />
                 </Fade>
               }
             />
@@ -49,6 +52,7 @@ export default function App() {
               element={
                 <Fade>
                   <Home />
+                  <Footer />
                 </Fade>
               }
             />
