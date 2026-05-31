@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FiPause, FiPlay, FiX } from 'react-icons/fi'
 import { formatDuration } from '../lib/api'
 import { getLyrics } from '../lib/lyrics'
+import { useI18n } from '../lib/i18n'
 import { togglePreview, usePlayingId } from '../lib/audioStore'
 import type { AlbumDetail, Track } from '../lib/types'
 
@@ -26,6 +27,7 @@ function Row({ label, value }: { label: string; value?: string | number }) {
 // "descifrar": full metadata for the selected track (with album context) or the
 // album itself when no track is selected.
 export function DetailDrawer({ album, track, open, onClose }: Props) {
+  const { t } = useI18n()
   const playingId = usePlayingId()
   const [lyrics, setLyrics] = useState<string | null>(null)
   const [lyricsState, setLyricsState] = useState<'idle' | 'loading' | 'done'>('idle')
@@ -65,7 +67,7 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
           >
             <button
               onClick={onClose}
-              aria-label="cerrar"
+              aria-label="x"
               className="self-end text-white/50 transition-opacity hover:opacity-100"
             >
               <FiX size={20} />
@@ -88,19 +90,22 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
                 className="mt-4 flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
               >
                 {playingId === track.id ? <FiPause /> : <FiPlay />}
-                {playingId === track.id ? 'pausar preview' : 'preview 30s'}
+                {playingId === track.id ? t('detail.pause') : t('detail.preview')}
               </button>
             )}
 
             <div className="mt-5">
               {track ? (
                 <>
-                  <Row label="álbum" value={album.name} />
-                  <Row label="pista" value={track.trackNumber} />
-                  <Row label="disco" value={track.discNumber} />
-                  <Row label="duración" value={formatDuration(track.durationMs)} />
-                  <Row label="género" value={track.genre || album.genre} />
-                  <Row label="año" value={album.year} />
+                  <Row label={t('detail.album')} value={album.name} />
+                  <Row label={t('detail.track')} value={track.trackNumber} />
+                  <Row label={t('detail.disc')} value={track.discNumber} />
+                  <Row
+                    label={t('detail.duration')}
+                    value={formatDuration(track.durationMs)}
+                  />
+                  <Row label={t('detail.genre')} value={track.genre || album.genre} />
+                  <Row label={t('detail.year')} value={album.year} />
                 </>
               ) : null}
             </div>
@@ -108,10 +113,10 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
             {track && (
               <div className="mt-5">
                 <p className="mb-2 text-xs font-semibold tracking-widest text-white/40">
-                  letra
+                  {t('detail.lyrics')}
                 </p>
                 {lyricsState === 'loading' && (
-                  <p className="text-sm text-white/40">buscando letra...</p>
+                  <p className="text-sm text-white/40">{t('detail.lyricsLoading')}</p>
                 )}
                 {lyricsState === 'done' && lyrics && (
                   <p className="normal-case whitespace-pre-wrap text-sm leading-relaxed text-white/80">
@@ -119,21 +124,21 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
                   </p>
                 )}
                 {lyricsState === 'done' && !lyrics && (
-                  <p className="text-sm text-white/40">letra no disponible.</p>
+                  <p className="text-sm text-white/40">{t('detail.lyricsNone')}</p>
                 )}
               </div>
             )}
 
             <p className="mt-5 mb-2 text-xs font-semibold tracking-widest text-white/40">
-              álbum
+              {t('detail.album')}
             </p>
             <div>
-              <Row label="artista" value={album.artistName} />
-              <Row label="año" value={album.year} />
-              <Row label="género" value={album.genre} />
-              <Row label="canciones" value={album.trackCount} />
-              <Row label="sello" value={album.recordLabel} />
-              <Row label="lanzamiento" value={album.releaseDate} />
+              <Row label={t('detail.artist')} value={album.artistName} />
+              <Row label={t('detail.year')} value={album.year} />
+              <Row label={t('detail.genre')} value={album.genre} />
+              <Row label={t('detail.songs')} value={album.trackCount} />
+              <Row label={t('detail.label')} value={album.recordLabel} />
+              <Row label={t('detail.release')} value={album.releaseDate} />
               <Row label="©" value={album.copyright} />
             </div>
 
@@ -144,7 +149,7 @@ export function DetailDrawer({ album, track, open, onClose }: Props) {
                 rel="noreferrer"
                 className="mt-5 text-center text-sm text-accent underline-offset-4 hover:underline"
               >
-                abrir álbum
+                {t('detail.open')}
               </a>
             )}
           </motion.aside>

@@ -5,6 +5,7 @@ import { TierBoard } from '../components/TierBoard'
 import { DetailDrawer } from '../components/DetailDrawer'
 import { getAlbum } from '../lib/api'
 import { canShareImage, exportBoard, shareImage } from '../lib/exportImage'
+import { useI18n } from '../lib/i18n'
 import { stopPreview } from '../lib/audioStore'
 import {
   decodeBoard,
@@ -19,6 +20,7 @@ import {
 import type { AlbumDetail, Track } from '../lib/types'
 
 export default function AlbumPage() {
+  const { t } = useI18n()
   const { albumId = '' } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const [album, setAlbum] = useState<AlbumDetail | null>(null)
@@ -167,9 +169,11 @@ export default function AlbumPage() {
   if (error) {
     return (
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-16 text-center md:px-6">
-        <p className="text-white/60">no se pudo cargar el álbum: {error}</p>
+        <p className="text-white/60">
+          {t('album.loadError')} {error}
+        </p>
         <Link to="/" className="mt-4 inline-block text-accent hover:underline">
-          volver a buscar
+          {t('album.back')}
         </Link>
       </main>
     )
@@ -178,7 +182,7 @@ export default function AlbumPage() {
   if (!album || !board) {
     return (
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-16 text-center md:px-6">
-        <p className="text-accent">cargando álbum...</p>
+        <p className="text-accent">{t('album.loading')}</p>
       </main>
     )
   }
@@ -203,14 +207,12 @@ export default function AlbumPage() {
 
       {readOnly && (
         <div className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="normal-case text-sm text-white/80">
-            estás viendo una tier list compartida. remézclala para crear la tuya.
-          </p>
+          <p className="normal-case text-sm text-white/80">{t('album.sharedBanner')}</p>
           <button
             onClick={handleRemix}
             className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
           >
-            remixar
+            {t('album.remix')}
           </button>
         </div>
       )}

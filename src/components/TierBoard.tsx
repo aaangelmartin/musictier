@@ -27,6 +27,7 @@ import {
   type BoardState,
   type Tier,
 } from '../lib/tierStorage'
+import { useI18n } from '../lib/i18n'
 import type { Track } from '../lib/types'
 
 interface Props {
@@ -51,6 +52,7 @@ const collision: CollisionDetection = (args) => {
 }
 
 export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props) {
+  const { t } = useI18n()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [presetsOpen, setPresetsOpen] = useState(false)
   // Mouse: small drag threshold so taps still click buttons. Touch: press-and-
@@ -206,14 +208,14 @@ export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props
             onClick={addTier}
             className="flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/40 hover:text-white"
           >
-            <FiPlus size={14} /> añadir tier
+            <FiPlus size={14} /> {t('tier.add')}
           </button>
           <div className="relative">
             <button
               onClick={() => setPresetsOpen((o) => !o)}
               className="flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/40 hover:text-white"
             >
-              <FiGrid size={14} /> plantilla
+              <FiGrid size={14} /> {t('tier.template')}
             </button>
             {presetsOpen && (
               <>
@@ -245,7 +247,7 @@ export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props
                     </button>
                   ))}
                   <p className="border-t border-white/10 px-4 py-2 text-xs text-white/40">
-                    reinicia las posiciones
+                    {t('tier.resets')}
                   </p>
                 </div>
               </>

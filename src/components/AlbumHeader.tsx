@@ -9,6 +9,7 @@ import {
   FiShare2,
   FiUsers,
 } from 'react-icons/fi'
+import { useI18n } from '../lib/i18n'
 import type { AlbumDetail } from '../lib/types'
 
 interface Props {
@@ -39,6 +40,7 @@ export function AlbumHeader({
   onInfo,
 }: Props) {
   const [shareOpen, setShareOpen] = useState(false)
+  const { t } = useI18n()
   return (
     <header className="flex flex-col gap-5 sm:flex-row sm:items-end">
       <img
@@ -52,7 +54,8 @@ export function AlbumHeader({
         </h1>
         <p className="normal-case mt-1 text-white/60">
           {album.artistName}
-          {album.year ? ` - ${album.year}` : ''} - {album.tracks.length} canciones
+          {album.year ? ` - ${album.year}` : ''} - {album.tracks.length}{' '}
+          {t('album.songs')}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -62,12 +65,12 @@ export function AlbumHeader({
               className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
             >
               {copied ? <FiCheck /> : <FiShare2 />}
-              {copied ? 'link copiado' : 'compartir'}
+              {copied ? t('album.copied') : t('album.share')}
             </button>
             {shareOpen && (
               <>
                 <button
-                  aria-label="cerrar menú"
+                  aria-label="x"
                   className="fixed inset-0 z-10 cursor-default"
                   onClick={() => setShareOpen(false)}
                 />
@@ -82,10 +85,10 @@ export function AlbumHeader({
                     <FiList className="mt-0.5 shrink-0 text-accent" />
                     <span>
                       <span className="block text-sm font-semibold text-white">
-                        mi tier list
+                        {t('album.myList')}
                       </span>
                       <span className="block text-xs text-white/50">
-                        comparten tu ranking exacto
+                        {t('album.myListDesc')}
                       </span>
                     </span>
                   </button>
@@ -100,10 +103,10 @@ export function AlbumHeader({
                     <FiUsers className="mt-0.5 shrink-0 text-accent" />
                     <span>
                       <span className="block text-sm font-semibold text-white">
-                        álbum vacío
+                        {t('album.emptyAlbum')}
                       </span>
                       <span className="block text-xs text-white/50">
-                        cada uno hace el suyo
+                        {t('album.emptyAlbumDesc')}
                       </span>
                     </span>
                   </button>
@@ -120,10 +123,10 @@ export function AlbumHeader({
                         <FiImage className="mt-0.5 shrink-0 text-accent" />
                         <span>
                           <span className="block text-sm font-semibold text-white">
-                            como imagen
+                            {t('album.asImage')}
                           </span>
                           <span className="block text-xs text-white/50">
-                            comparte el png de tu tier list
+                            {t('album.asImageDesc')}
                           </span>
                         </span>
                       </button>
@@ -139,24 +142,24 @@ export function AlbumHeader({
             className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:border-white/60 disabled:opacity-50"
           >
             <FiDownload />
-            {exporting ? 'exportando...' : 'exportar png'}
+            {exporting ? t('album.exporting') : t('album.export')}
           </button>
           <button
             onClick={onInfo}
-            aria-label="info del álbum"
+            aria-label={t('album.decipher')}
             className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:border-white/60"
           >
             <FiInfo />
-            descifrar
+            {t('album.decipher')}
           </button>
           {editable && (
             <button
               onClick={onReset}
-              aria-label="reiniciar tier list"
+              aria-label={t('album.reset')}
               className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white/60 transition-colors hover:border-white/60 hover:text-white"
             >
               <FiRotateCcw />
-              reiniciar
+              {t('album.reset')}
             </button>
           )}
         </div>

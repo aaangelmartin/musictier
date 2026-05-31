@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useI18n } from '../lib/i18n'
 import type { AlbumSummary } from '../lib/types'
 
 interface Props {
@@ -10,15 +11,22 @@ interface Props {
 }
 
 export function SearchResults({ albums, loading, error, query }: Props) {
+  const { t } = useI18n()
   if (error) {
-    return <p className="py-10 text-center text-white/50">algo salió mal: {error}</p>
+    return (
+      <p className="py-10 text-center text-white/50">
+        {t('results.error')} {error}
+      </p>
+    )
   }
   if (loading) {
-    return <p className="py-10 text-center text-white/50">buscando...</p>
+    return <p className="py-10 text-center text-white/50">{t('results.searching')}</p>
   }
   if (query && albums.length === 0) {
     return (
-      <p className="py-10 text-center text-white/50">sin resultados para “{query}”.</p>
+      <p className="py-10 text-center text-white/50">
+        {t('results.noResultsFor')} “{query}”.
+      </p>
     )
   }
   if (albums.length === 0) return null

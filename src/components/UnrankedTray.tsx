@@ -2,6 +2,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
 import { SortableSongCard } from './SortableSongCard'
 import { UNRANKED } from '../lib/tierStorage'
+import { useI18n } from '../lib/i18n'
 import type { Track } from '../lib/types'
 
 interface Props {
@@ -13,11 +14,12 @@ interface Props {
 
 export function UnrankedTray({ trackIds, trackMap, onInfo, editable }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: UNRANKED })
+  const { t } = useI18n()
 
   return (
     <div className="rounded-lg border border-white/10">
       <p className="border-b border-white/10 px-3 py-2 text-xs font-semibold tracking-widest text-accent">
-        sin clasificar - {trackIds.length}
+        {t('tier.unranked')} - {trackIds.length}
       </p>
       <div
         ref={setNodeRef}
@@ -39,9 +41,7 @@ export function UnrankedTray({ trackIds, trackMap, onInfo, editable }: Props) {
           </div>
         </SortableContext>
         {trackIds.length === 0 && (
-          <p className="py-3 text-center text-xs text-white/30">
-            todo clasificado. arrastra de vuelta aquí para quitar de un tier.
-          </p>
+          <p className="py-3 text-center text-xs text-white/30">{t('tier.allRanked')}</p>
         )}
       </div>
     </div>

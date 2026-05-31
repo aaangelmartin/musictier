@@ -6,9 +6,11 @@ import { SavedLists } from '../components/SavedLists'
 import { useDebounce } from '../lib/useDebounce'
 import { searchAlbums } from '../lib/api'
 import { getSavedLists, removeSavedList, type SavedListMeta } from '../lib/tierStorage'
+import { useI18n } from '../lib/i18n'
 import type { AlbumSummary } from '../lib/types'
 
 export default function Home() {
+  const { t } = useI18n()
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [albums, setAlbums] = useState<AlbumSummary[]>([])
@@ -62,11 +64,10 @@ export default function Home() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-12 pt-12 md:px-6 md:pt-20">
       <section className="pb-8">
         <h1 className="text-5xl font-bold leading-[0.95] tracking-tight sm:text-6xl">
-          rankea las canciones de <span className="text-accent">cualquier álbum</span>.
+          {t('home.hero1')} <span className="text-accent">{t('home.heroAccent')}</span>.
         </h1>
         <p className="normal-case mt-5 max-w-lg text-base text-white/70">
-          busca un disco, arrástralo a tiers, lee las letras y comparte tu ranking. sin
-          cuentas, sin login.
+          {t('home.subtitle')}
         </p>
       </section>
 

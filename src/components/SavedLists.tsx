@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FiX } from 'react-icons/fi'
+import { useI18n } from '../lib/i18n'
 import type { SavedListMeta } from '../lib/tierStorage'
 
 interface Props {
@@ -8,12 +9,13 @@ interface Props {
 }
 
 export function SavedLists({ lists, onRemove }: Props) {
+  const { t } = useI18n()
   if (!lists.length) return null
 
   return (
     <section className="py-8">
       <h2 className="mb-4 text-sm font-semibold tracking-widest text-white/50">
-        tus tier lists
+        {t('saved.title')}
       </h2>
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {lists.map((l) => (
@@ -39,7 +41,7 @@ export function SavedLists({ lists, onRemove }: Props) {
             </Link>
             <button
               onClick={() => onRemove(l.id)}
-              aria-label="quitar de tus tier lists"
+              aria-label={t('saved.remove')}
               className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white/80 opacity-0 backdrop-blur-sm transition-opacity hover:text-white group-hover:opacity-100"
             >
               <FiX size={15} />
