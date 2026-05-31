@@ -30,6 +30,8 @@ function defaultSource(env: AppleEnv): 'apple' | 'itunes' {
 interface ItunesRow {
   wrapperType?: string
   collectionId?: number
+  collectionName?: string
+  artistName?: string
   artistId?: number
   [k: string]: unknown
 }
@@ -39,6 +41,32 @@ async function itunesGet(path: string): Promise<ItunesRow[]> {
   if (!res.ok) throw new Error(`itunes ${res.status}`)
   const json = (await res.json()) as { results?: ItunesRow[] }
   return json.results ?? []
+}
+
+const DIACRITICS = /[̀-ͯ]/g
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(DIACRITICS, '')
+    .replace(/\s*-\s*(single|ep)\s*$/i, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// rank so an album whose title matches the query beats an artist's other albums
+function relevance(row: ItunesRow, q: string): number {
+  const name = norm(row.collectionName ?? '')
+  const artist = norm(row.artistName ?? '')
+  let s = 0
+  if (name === q) s += 100
+  else if (name.startsWith(q)) s += 55
+  else if (name.includes(q)) s += 40
+  // exact artist match (artist query) must beat an incidental title mention
+  if (artist === q) s += 70
+  else if (artist.includes(q)) s += 25
+  return s
 }
 
 // Album-by-term search alone misses an artist's albums (it surfaces singles and
@@ -73,6 +101,14 @@ async function itunesSearch(term: string, country: string): Promise<unknown> {
     seen.add(r.collectionId)
     return true
   })
+
+  // stable sort by relevance to the query (album-title matches rise to the top)
+  const q = norm(term)
+  results
+    .map((r, i) => ({ r, i, s: relevance(r, q) }))
+    .sort((a, b) => b.s - a.s || a.i - b.i)
+    .forEach((x, i) => (results[i] = x.r))
+
   return { resultCount: results.length, results }
 }
 
