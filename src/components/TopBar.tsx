@@ -10,9 +10,9 @@ export function TopBar() {
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 md:px-6">
         <Link
           to="/"
-          className="text-base font-bold tracking-tight text-white transition-opacity hover:opacity-80"
+          className="text-base font-bold tracking-tight text-accent transition-opacity hover:opacity-80"
         >
-          tier maker<span className="text-accent">.</span>
+          tier maker.
         </Link>
 
         {!onHome && (

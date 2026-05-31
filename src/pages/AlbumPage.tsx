@@ -118,6 +118,8 @@ export default function AlbumPage() {
           onInfo={(t) => setDetail(t)}
           editable
           exportRef={exportRef}
+          exportTitle={album.name}
+          exportSubtitle={album.artistName}
         />
       </div>
 

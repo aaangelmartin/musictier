@@ -45,6 +45,10 @@ export async function exportBoard(node: HTMLElement, filename: string): Promise<
   const prevDisplay = hidden.map((el) => el.style.display)
   hidden.forEach((el) => (el.style.display = 'none'))
 
+  // reveal export-only branding (title header + watermark)
+  const only = Array.from(node.querySelectorAll<HTMLElement>('[data-export-only]'))
+  only.forEach((el) => (el.style.display = el.getAttribute('data-export-only') || 'flex'))
+
   // inline every artwork as a data url so html-to-image embeds it for sure
   const dataUrls = await Promise.all(originals.map(toDataUrl))
   await Promise.all(
@@ -63,6 +67,7 @@ export async function exportBoard(node: HTMLElement, filename: string): Promise<
     link.click()
   } finally {
     hidden.forEach((el, i) => (el.style.display = prevDisplay[i]))
+    only.forEach((el) => (el.style.display = ''))
     await Promise.all(imgs.map((img, i) => setSrc(img, originals[i])))
   }
 }
