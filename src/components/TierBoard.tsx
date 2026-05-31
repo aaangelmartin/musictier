@@ -29,9 +29,6 @@ interface Props {
   trackMap: Record<string, Track>
   onInfo: (t: Track) => void
   editable: boolean
-  exportRef: React.Ref<HTMLDivElement>
-  exportTitle: string
-  exportSubtitle?: string
 }
 
 function findContainer(items: Record<string, string[]>, id: string): string | undefined {
@@ -47,16 +44,7 @@ const collision: CollisionDetection = (args) => {
   return within.length ? within : rectIntersection(args)
 }
 
-export function TierBoard({
-  board,
-  setBoard,
-  trackMap,
-  onInfo,
-  editable,
-  exportRef,
-  exportTitle,
-  exportSubtitle,
-}: Props) {
+export function TierBoard({ board, setBoard, trackMap, onInfo, editable }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null)
   // Mouse: small drag threshold so taps still click buttons. Touch: press-and-
   // hold so a finger drag does not fight page scroll (cards also set
@@ -167,17 +155,7 @@ export function TierBoard({
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div ref={exportRef} className="space-y-2 rounded-xl bg-bg p-1">
-        {/* export-only header */}
-        <div data-export-only="flex" className="flex-col gap-0.5 px-1 pb-2 pt-1">
-          <span className="normal-case text-xl font-bold tracking-tight text-white">
-            {exportTitle}
-          </span>
-          {exportSubtitle && (
-            <span className="normal-case text-sm text-white/60">{exportSubtitle}</span>
-          )}
-        </div>
-
+      <div className="space-y-2 rounded-xl bg-bg p-1">
         {board.tiers.map((tier) => (
           <TierRow
             key={tier.id}
@@ -191,12 +169,6 @@ export function TierBoard({
             editable={editable}
           />
         ))}
-
-        {/* export-only watermark */}
-        <div data-export-only="flex" className="items-center justify-between px-1 pt-2">
-          <span className="text-sm font-bold text-accent">tier maker.</span>
-          <span className="text-xs text-white/40">aaangelmartin.com</span>
-        </div>
       </div>
 
       {editable && (

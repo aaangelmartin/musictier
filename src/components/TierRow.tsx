@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { FiTrash2 } from 'react-icons/fi'
+import { FiDroplet, FiTrash2 } from 'react-icons/fi'
 import { SortableSongCard } from './SortableSongCard'
 import type { Tier } from '../lib/tierStorage'
 import type { Track } from '../lib/types'
@@ -49,13 +49,13 @@ export function TierRow({
         )}
 
         {editable && (
-          <div className="absolute bottom-1.5 flex items-center gap-2">
-            {/* native colour picker: reliable and never clipped */}
+          <div className="absolute bottom-2 flex items-center gap-3">
+            {/* droplet opens the native colour picker (reliable, never clipped) */}
             <label
-              className="h-4 w-4 cursor-pointer rounded-full ring-1 ring-black/30"
-              style={{ backgroundColor: tier.color }}
+              className="cursor-pointer text-black/60 transition-colors hover:text-black"
               title="cambiar color"
             >
+              <FiDroplet size={15} />
               <input
                 type="color"
                 value={tier.color}
@@ -70,7 +70,7 @@ export function TierRow({
               title="eliminar tier"
               className="text-black/60 transition-colors hover:text-black"
             >
-              <FiTrash2 size={14} />
+              <FiTrash2 size={15} />
             </button>
           </div>
         )}

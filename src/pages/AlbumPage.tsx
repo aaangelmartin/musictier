@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AlbumHeader } from '../components/AlbumHeader'
 import { TierBoard } from '../components/TierBoard'
@@ -17,7 +17,6 @@ export default function AlbumPage() {
   const [detail, setDetail] = useState<Track | 'album' | null>(null)
   const [copied, setCopied] = useState(false)
   const [exporting, setExporting] = useState(false)
-  const exportRef = useRef<HTMLDivElement>(null)
 
   // load album + its saved (or fresh) board
   useEffect(() => {
@@ -60,14 +59,21 @@ export default function AlbumPage() {
   }
 
   async function handleExport() {
-    if (!exportRef.current || !album) return
+    if (!album || !board) return
     setExporting(true)
     try {
       const slug = album.name
         .replace(/[^a-z0-9]+/gi, '-')
         .toLowerCase()
         .slice(0, 40)
-      await exportBoard(exportRef.current, `tierlist-${slug}.png`)
+      await exportBoard({
+        board,
+        trackMap,
+        albumName: album.name,
+        artistName: album.artistName,
+        albumArtUrl: album.artworkUrl,
+        filename: `tierlist-${slug}.png`,
+      })
     } finally {
       setExporting(false)
     }
@@ -117,9 +123,6 @@ export default function AlbumPage() {
           trackMap={trackMap}
           onInfo={(t) => setDetail(t)}
           editable
-          exportRef={exportRef}
-          exportTitle={album.name}
-          exportSubtitle={album.artistName}
         />
       </div>
 

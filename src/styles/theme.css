@@ -41,11 +41,6 @@
     text-transform: none;
   }
 
-  /* shown only in the exported PNG (revealed by exportImage, hidden otherwise) */
-  [data-export-only] {
-    display: none;
-  }
-
   h1,
   h2,
   h3 {
