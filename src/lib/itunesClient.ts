@@ -75,29 +75,24 @@ function relevance(row: ItunesRow, tokens: string[], full: string): number {
   return s
 }
 
-export async function clientSearch(term: string, country = 'es') {
-  const enc = encodeURIComponent(term)
-  const c = `country=${country}`
-  // album-by-term often misses an album (e.g. "el odio siempre gana lhaine" ->
-  // 0). A song search resolves the album via its tracks, and an artist search
-  // pulls full discographies. We pool all three and rank by relevance.
-  const [artists, byTerm, songs] = await Promise.all([
-    get(`search?term=${enc}&entity=musicArtist&limit=2&${c}`),
-    get(`search?term=${enc}&entity=album&media=music&limit=25&${c}`),
-    get(`search?term=${enc}&entity=song&limit=15&${c}`),
-  ])
+// Does the row's "name + artist" contain every query word? A fully-covered top
+// hit means the plain search already nailed it; a miss is the signal to escalate.
+function coversAllTokens(row: ItunesRow | undefined, tokens: string[]): boolean {
+  if (!row) return false
+  const hay = `${norm(row.collectionName ?? '')} ${norm(row.artistName ?? '')}`
+  return tokens.every((t) => hay.includes(t))
+}
 
-  // only the top artist's discography, to keep the request count low
-  const artistIds = (artists.map((a) => a.artistId).filter(Boolean) as number[]).slice(
-    0,
-    1,
-  )
-  const discographies = await Promise.all(
-    artistIds.map((id) =>
-      get(`lookup?id=${id}&entity=album&limit=100&${c}`).catch(() => []),
-    ),
-  )
-
+// Pool discographies + album-term + song rows, dedupe by collectionId (collection
+// rows first, so the rich album row wins over a thinner song row for the same id),
+// and stable-sort by relevance to the query.
+function poolAndRank(
+  discographies: ItunesRow[][],
+  byTerm: ItunesRow[],
+  songs: ItunesRow[],
+  tokens: string[],
+  full: string,
+): ItunesRow[] {
   // song rows carry their album's collection fields, so they normalize like albums
   const merged: ItunesRow[] = [
     ...discographies.flat().filter((r) => r.wrapperType === 'collection'),
@@ -110,14 +105,100 @@ export async function clientSearch(term: string, country = 'es') {
     seen.add(r.collectionId)
     return true
   })
-
-  // stable sort by relevance to the query
-  const full = norm(term)
-  const tokens = full.split(' ').filter((t) => t.length >= 2)
   results
     .map((r, i) => ({ r, i, s: relevance(r, tokens, full) }))
     .sort((a, b) => b.s - a.s || a.i - b.i)
     .forEach((x, i) => (results[i] = x.r))
+  return results
+}
+
+// Prefixes and suffixes of the query (up to 2 words) — the artist name in a mixed
+// "album artist" / "artist album" query sits at one end of the phrase.
+function subPhrases(tokens: string[]): string[] {
+  const n = tokens.length
+  const max = Math.min(2, n - 1)
+  const out: string[] = []
+  for (let len = 1; len <= max; len++) {
+    out.push(tokens.slice(0, len).join(' ')) // prefix
+    out.push(tokens.slice(n - len).join(' ')) // suffix
+  }
+  return [...new Set(out)]
+}
+
+// Distinct artist ids from sub-phrase searches, with artists whose name exactly
+// matches the phrase that found them first, so the right discography is fetched
+// before the cap fills up with fuzzy near-misses.
+function rankedArtistIds(
+  sets: { phrase: string; rows: ItunesRow[] }[],
+  cap: number,
+): number[] {
+  const exact: number[] = []
+  const fuzzy: number[] = []
+  for (const { phrase, rows } of sets) {
+    for (const r of rows) {
+      if (!r.artistId) continue
+      ;(norm(r.artistName ?? '') === phrase ? exact : fuzzy).push(r.artistId)
+    }
+  }
+  const out: number[] = []
+  for (const id of [...exact, ...fuzzy]) {
+    if (!out.includes(id)) out.push(id)
+    if (out.length >= cap) break
+  }
+  return out
+}
+
+export async function clientSearch(term: string, country = 'es') {
+  const enc = encodeURIComponent(term)
+  const c = `country=${country}`
+  const full = norm(term)
+  const tokens = full.split(' ').filter((t) => t.length >= 2)
+
+  // album-by-term often misses an album (e.g. "el odio siempre gana lhaine" ->
+  // 0). A song search resolves the album via its tracks, and an artist search
+  // pulls full discographies. We pool all three and rank by relevance.
+  const [artists, byTerm, songs] = await Promise.all([
+    get(`search?term=${enc}&entity=musicArtist&limit=2&${c}`),
+    get(`search?term=${enc}&entity=album&media=music&limit=25&${c}`),
+    get(`search?term=${enc}&entity=song&limit=15&${c}`),
+  ])
+
+  const fetchedIds = new Set<number>()
+  const discographies: ItunesRow[][] = []
+  async function addDiscographies(ids: number[]) {
+    const fresh = ids.filter((id) => !fetchedIds.has(id))
+    fresh.forEach((id) => fetchedIds.add(id))
+    const discs = await Promise.all(
+      fresh.map((id) =>
+        get(`lookup?id=${id}&entity=album&limit=100&${c}`).catch(() => []),
+      ),
+    )
+    discographies.push(...discs)
+  }
+
+  // the top artist's discography, to keep the common-case request count low
+  const topId = artists.map((a) => a.artistId).filter(Boolean)[0] as number | undefined
+  if (topId) await addDiscographies([topId])
+
+  let results = poolAndRank(discographies, byTerm, songs, tokens, full)
+
+  // Escalation: a multi-word query whose best hit still misses some words is
+  // likely a mixed "album artist" query (e.g. "BELLA VISTA UGLY" — album "BELLA
+  // VISTA" by artist "UGLY"), which iTunes can't match as a single term. Search
+  // the artist by sub-phrases of the query, pull those discographies, and re-rank.
+  // This extra fan-out only fires when the plain search fell short.
+  if (tokens.length >= 2 && !coversAllTokens(results[0], tokens)) {
+    const sets = await Promise.all(
+      subPhrases(tokens).map(async (phrase) => ({
+        phrase,
+        rows: await get(
+          `search?term=${encodeURIComponent(phrase)}&entity=musicArtist&limit=2&${c}`,
+        ),
+      })),
+    )
+    await addDiscographies(rankedArtistIds(sets, 3))
+    results = poolAndRank(discographies, byTerm, songs, tokens, full)
+  }
 
   return { resultCount: results.length, results }
 }
