@@ -158,10 +158,13 @@ export async function clientSearch(term: string, country = 'es') {
   // 0). A song search resolves the album via its tracks, and an artist search
   // pulls full discographies. We pool all three and rank by relevance.
   const [artists, byTerm, songs] = await Promise.all([
-    get(`search?term=${enc}&entity=musicArtist&limit=2&${c}`),
+    get(`search?term=${enc}&entity=musicArtist&limit=5&${c}`),
     get(`search?term=${enc}&entity=album&media=music&limit=25&${c}`),
     get(`search?term=${enc}&entity=song&limit=15&${c}`),
   ])
+  // every artist row we see across the term + escalation searches, for the
+  // "artists named X" listing; deduped by id at the end.
+  const artistRows: ItunesRow[] = [...artists]
 
   const fetchedIds = new Set<number>()
   const discographies: ItunesRow[][] = []
@@ -192,20 +195,38 @@ export async function clientSearch(term: string, country = 'es') {
       subPhrases(tokens).map(async (phrase) => ({
         phrase,
         rows: await get(
-          `search?term=${encodeURIComponent(phrase)}&entity=musicArtist&limit=2&${c}`,
+          `search?term=${encodeURIComponent(phrase)}&entity=musicArtist&limit=3&${c}`,
         ),
       })),
     )
+    sets.forEach((s) => artistRows.push(...s.rows))
     await addDiscographies(rankedArtistIds(sets, 3))
     results = poolAndRank(discographies, byTerm, songs, tokens, full)
   }
 
-  return { resultCount: results.length, results }
+  const seenArtist = new Set<number>()
+  const artistList = artistRows.filter((a) => {
+    if (!a.artistId || seenArtist.has(a.artistId)) return false
+    seenArtist.add(a.artistId)
+    return true
+  })
+
+  return { resultCount: results.length, results, artists: artistList }
 }
 
 export async function clientAlbum(taggedId: string, country = 'es') {
   const raw = taggedId.includes(':') ? taggedId.split(/:(.+)/)[1] : taggedId
   return fetchJson(
     `lookup?id=${encodeURIComponent(raw)}&entity=song&limit=200&country=${country}`,
+  )
+}
+
+// An artist's full set of releases (the discography page filters this to
+// albums + EPs). The first row is the artist node (name, genre); the rest are
+// collections.
+export async function clientArtist(taggedId: string, country = 'es') {
+  const raw = taggedId.includes(':') ? taggedId.split(/:(.+)/)[1] : taggedId
+  return fetchJson(
+    `lookup?id=${encodeURIComponent(raw)}&entity=album&limit=200&country=${country}`,
   )
 }

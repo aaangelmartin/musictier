@@ -4,15 +4,16 @@ import { SearchBar } from '../components/SearchBar'
 import { SearchResults } from '../components/SearchResults'
 import { SavedLists } from '../components/SavedLists'
 import { useDebounce } from '../lib/useDebounce'
-import { searchAlbums } from '../lib/api'
+import { searchCatalog } from '../lib/api'
 import { getSavedLists, removeSavedList, type SavedListMeta } from '../lib/tierStorage'
 import { useI18n } from '../lib/i18n'
-import type { AlbumSummary } from '../lib/types'
+import type { AlbumSummary, ArtistSummary } from '../lib/types'
 
 export default function Home() {
   const { t } = useI18n()
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') ?? '')
+  const [artists, setArtists] = useState<ArtistSummary[]>([])
   const [albums, setAlbums] = useState<AlbumSummary[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
@@ -34,6 +35,7 @@ export default function Home() {
   useEffect(() => {
     const term = debounced.trim()
     if (!term) {
+      setArtists([])
       setAlbums([])
       setError(undefined)
       return
@@ -41,9 +43,11 @@ export default function Home() {
     const id = ++reqId.current
     setLoading(true)
     setError(undefined)
-    searchAlbums(term)
+    searchCatalog(term)
       .then((res) => {
-        if (id === reqId.current) setAlbums(res)
+        if (id !== reqId.current) return
+        setArtists(res.artists)
+        setAlbums(res.albums)
       })
       .catch((e) => {
         if (id === reqId.current) setError(String(e.message ?? e))
@@ -75,6 +79,7 @@ export default function Home() {
 
       {searching ? (
         <SearchResults
+          artists={artists}
           albums={albums}
           loading={loading}
           error={error}

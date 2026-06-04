@@ -6,6 +6,7 @@ import { Footer } from './components/Footer'
 
 const Home = lazy(() => import('./pages/Home'))
 const AlbumPage = lazy(() => import('./pages/AlbumPage'))
+const ArtistPage = lazy(() => import('./pages/ArtistPage'))
 
 function Fade({ children }: { children: React.ReactNode }) {
   return (
@@ -43,6 +44,15 @@ export default function App() {
               element={
                 <Fade>
                   <AlbumPage />
+                  <Footer />
+                </Fade>
+              }
+            />
+            <Route
+              path="/artist/:artistId"
+              element={
+                <Fade>
+                  <ArtistPage />
                   <Footer />
                 </Fade>
               }

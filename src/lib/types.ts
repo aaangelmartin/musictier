@@ -13,6 +13,16 @@ export interface AlbumSummary {
   year?: string
 }
 
+export interface ArtistSummary {
+  /** source-tagged id, e.g. "itunes:88579922", used in /artist/:id links */
+  id: string
+  source: Source
+  name: string
+  /** derived from one of the artist's albums; iTunes artist rows carry no art */
+  artworkUrl?: string
+  genre?: string
+}
+
 export interface Track {
   id: string
   name: string
