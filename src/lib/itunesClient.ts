@@ -221,12 +221,19 @@ export async function clientAlbum(taggedId: string, country = 'es') {
   )
 }
 
+// Stable per-session token used to dodge a poisoned iTunes CDN edge entry (a
+// throttled `resultCount:1` body, or a cached CORS header for another origin).
+// Stable so the in-memory cache still dedupes within the session; unique enough
+// to miss the globally-cached canonical URL.
+const BUST = Math.random().toString(36).slice(2, 10)
+
 // An artist's full set of releases (the discography page filters this to
-// albums + EPs). The first row is the artist node (name, genre); the rest are
-// collections.
-export async function clientArtist(taggedId: string, country = 'es') {
+// albums + EPs). The first row is the artist node (name, link); the rest are
+// collections. `fresh` appends a cache-buster to retry past a poisoned edge.
+export async function clientArtist(taggedId: string, fresh = false, country = 'es') {
   const raw = taggedId.includes(':') ? taggedId.split(/:(.+)/)[1] : taggedId
+  const bust = fresh ? `&_=${BUST}` : ''
   return fetchJson(
-    `lookup?id=${encodeURIComponent(raw)}&entity=album&limit=200&country=${country}`,
+    `lookup?id=${encodeURIComponent(raw)}&entity=album&limit=200&country=${country}${bust}`,
   )
 }

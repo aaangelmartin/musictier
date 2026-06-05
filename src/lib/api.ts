@@ -21,6 +21,7 @@ interface ItunesEntity {
   collectionName?: string
   artistName?: string
   artistId?: number
+  artistLinkUrl?: string
   trackId?: number
   trackName?: string
   trackNumber?: number
@@ -138,7 +139,6 @@ function buildArtists(
         source: 'itunes',
         name,
         artworkUrl: artByArtist.get(r.artistId),
-        genre: r.primaryGenreName,
       },
       i,
       exact: n === query,
@@ -175,12 +175,28 @@ export async function searchCatalog(term: string): Promise<CatalogSearch> {
 
 export interface ArtistDiscography extends ArtistSummary {
   albums: AlbumSummary[]
+  /** the artist's Apple Music page, used to resolve their real photo */
+  appleUrl?: string
+}
+
+// Fetch the artist's release rows, retrying once past a poisoned iTunes CDN edge.
+// The canonical lookup url sometimes serves a throttled `resultCount:1` body (no
+// collections) or, cross-origin, a stale CORS header that rejects the fetch; a
+// cache-buster forces a fresh, origin-correct response.
+async function fetchArtistRows(id: string): Promise<ItunesEntity[]> {
+  const first = await (clientArtist(id) as Promise<{ results?: ItunesEntity[] }>)
+    .then((d) => d.results ?? [])
+    .catch(() => [] as ItunesEntity[])
+  if (first.some((r) => r.wrapperType === 'collection')) return first
+  const retry = await (clientArtist(id, true) as Promise<{ results?: ItunesEntity[] }>)
+    .then((d) => d.results ?? [])
+    .catch(() => [] as ItunesEntity[])
+  return retry.length ? retry : first
 }
 
 /** An artist's discography, filtered to albums + EPs, newest first. */
 export async function getArtistDiscography(id: string): Promise<ArtistDiscography> {
-  const data = (await clientArtist(id)) as { results?: ItunesEntity[] }
-  const rows = data.results ?? []
+  const rows = await fetchArtistRows(id)
   const node = rows.find((r) => r.wrapperType === 'artist')
   const seen = new Set<number>()
   const albums = rows
@@ -198,8 +214,46 @@ export async function getArtistDiscography(id: string): Promise<ArtistDiscograph
     source: 'itunes',
     name: node?.artistName ?? albums[0]?.artistName ?? 'unknown artist',
     artworkUrl: albums[0]?.artworkUrl,
-    genre: node?.primaryGenreName,
+    appleUrl: node?.artistLinkUrl,
     albums,
+  }
+}
+
+// Resolve an artist's real Apple Music photo. iTunes carries no artist image, so
+// we read the og:image off their Apple Music page (fetched through a CORS proxy
+// since the page sends none) and request a square smart-crop. Best-effort and
+// cached per artist; callers fall back to album art when it returns undefined.
+const ARTIST_IMG_KEY = 'musictier:artistImg:'
+export async function getArtistImage(
+  artistId: string,
+  appleUrl?: string,
+): Promise<string | undefined> {
+  if (!appleUrl) return undefined
+  const key = ARTIST_IMG_KEY + artistId
+  try {
+    const cached = localStorage.getItem(key)
+    if (cached) return cached
+  } catch {
+    /* ignore */
+  }
+  try {
+    const res = await fetch(
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(appleUrl)}`,
+    )
+    if (!res.ok) return undefined
+    const html = await res.text()
+    const m = html.match(/<meta property="og:image" content="([^"]+)"/)
+    if (!m) return undefined
+    // swap Apple's social crop (".../1200x630cw.png") for a square portrait crop
+    const url = m[1].replace(/\/\d+x\d+[a-z]*\.(jpg|png)$/i, '/600x600sr.jpg')
+    try {
+      localStorage.setItem(key, url)
+    } catch {
+      /* ignore */
+    }
+    return url
+  } catch {
+    return undefined
   }
 }
 
