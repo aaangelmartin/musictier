@@ -69,14 +69,9 @@ export function SearchResults({ artists, albums, loading, error, query }: Props)
                       </span>
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="normal-case truncate text-sm font-semibold text-white group-hover:text-accent">
-                      {artist.name}
-                    </p>
-                    <p className="normal-case truncate text-xs text-white/50">
-                      {artist.genre ?? t('results.artist')}
-                    </p>
-                  </div>
+                  <p className="normal-case min-w-0 truncate text-sm font-semibold text-white group-hover:text-accent">
+                    {artist.name}
+                  </p>
                 </Link>
               </motion.li>
             ))}

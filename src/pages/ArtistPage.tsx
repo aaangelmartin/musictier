@@ -1,21 +1,31 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { getArtistDiscography, type ArtistDiscography } from '../lib/api'
+import { getArtistDiscography, getArtistImage, type ArtistDiscography } from '../lib/api'
 import { useI18n } from '../lib/i18n'
 
 export default function ArtistPage() {
   const { t } = useI18n()
   const { artistId = '' } = useParams()
   const [artist, setArtist] = useState<ArtistDiscography | null>(null)
+  const [photo, setPhoto] = useState<string>()
   const [error, setError] = useState<string>()
 
   useEffect(() => {
     let alive = true
     setArtist(null)
+    setPhoto(undefined)
     setError(undefined)
     getArtistDiscography(artistId)
-      .then((a) => alive && setArtist(a))
+      .then((a) => {
+        if (!alive) return
+        setArtist(a)
+        setPhoto(a.artworkUrl) // album art as a placeholder
+        // upgrade to the real Apple Music photo once it resolves (best-effort)
+        getArtistImage(a.id, a.appleUrl).then((url) => {
+          if (alive && url) setPhoto(url)
+        })
+      })
       .catch((e) => alive && setError(String(e.message ?? e)))
     return () => {
       alive = false
@@ -54,12 +64,8 @@ export default function ArtistPage() {
 
       <header className="mt-6 flex items-center gap-4">
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/5">
-          {artist.artworkUrl ? (
-            <img
-              src={artist.artworkUrl}
-              alt={artist.name}
-              className="h-full w-full object-cover"
-            />
+          {photo ? (
+            <img src={photo} alt={artist.name} className="h-full w-full object-cover" />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-2xl font-bold text-white/40">
               {artist.name.charAt(0).toUpperCase()}
@@ -67,11 +73,10 @@ export default function ArtistPage() {
           )}
         </div>
         <div className="min-w-0">
-          <h1 className="truncate text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="normal-case truncate text-3xl font-bold tracking-tight sm:text-4xl">
             {artist.name}
           </h1>
           <p className="normal-case mt-1 text-sm text-white/50">
-            {artist.genre ? `${artist.genre} · ` : ''}
             {artist.albums.length} {t('artist.releases')}
           </p>
         </div>

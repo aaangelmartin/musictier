@@ -20,7 +20,6 @@ export interface ArtistSummary {
   name: string
   /** derived from one of the artist's albums; iTunes artist rows carry no art */
   artworkUrl?: string
-  genre?: string
 }
 
 export interface Track {
