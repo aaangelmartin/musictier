@@ -53,6 +53,7 @@ export function SearchResults({ artists, albums, loading, error, query }: Props)
               >
                 <Link
                   to={`/artist/${artist.id}`}
+                  state={{ artwork: artist.artworkUrl, name: artist.name }}
                   className="group flex items-center gap-3"
                 >
                   <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/5">
